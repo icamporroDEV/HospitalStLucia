@@ -1,0 +1,24 @@
+{
+    "name": "hospital-st-lucia/legacy-his",
+    "description": "Aplicación HIS legada simulada para fines académicos.",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "php": ">=8.3"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.5"
+    },
+    "scripts": {
+        "test": "phpunit"
+    },
+    "config": {
+        "allow-plugins": {},
+        "platform": {
+            "php": "8.3.0"
+        },
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

@@ -1,0 +1,365 @@
+<!doctype html>
+<!--
+  THROWAWAY UI PROTOTYPE — not production code.
+  Question: which visual structure best communicates a critical hospital system from 2008-2010?
+  Three variants are switchable with ?variant=A, ?variant=B, or ?variant=C.
+-->
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Clínica Santa Lucía — Prototipo HIS legado</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: Arial, Helvetica, sans-serif;
+        color: #222;
+        background: #c9d2d9;
+        --blue: #315844;
+        --blue-dark: #213d30;
+        --blue-active: #4f765f;
+        --line: #aab7c2;
+        --soft-line: #c8d1d8;
+        --page: #e9eef2;
+        --panel: #fff;
+        --table-head: #d7e4ef;
+        --notice: #fff4ce;
+      }
+
+      * { box-sizing: border-box; }
+      body { margin: 0; min-width: 920px; background: #c9d2d9; font-size: 13px; }
+      button, input, select { font: inherit; }
+      a { color: #275d45; text-decoration: underline; cursor: pointer; }
+      .prototype-note {
+        background: #342e21;
+        color: #fff6d7;
+        border-bottom: 1px solid #15120d;
+        padding: 6px 14px;
+        font: 12px Verdana, sans-serif;
+        letter-spacing: .02em;
+        text-align: center;
+      }
+      .variant { display: none; min-height: calc(100vh - 27px); }
+      .variant.active { display: block; }
+      .brand-mark {
+        display: grid;
+        grid-template-columns: repeat(2, 13px);
+        gap: 3px;
+        width: 29px;
+        flex: 0 0 auto;
+      }
+      .brand-mark i { display: block; width: 13px; height: 13px; background: currentColor; }
+      .legacy-button {
+        min-height: 32px;
+        padding: 5px 13px;
+        border: 1px solid #7d8d99;
+        border-radius: 2px;
+        background: linear-gradient(#fff, #dce3e8);
+        color: #1f2e39;
+        box-shadow: inset 0 1px #fff;
+        font-weight: bold;
+        cursor: pointer;
+      }
+      .legacy-button:active { transform: scale(.96); }
+      .legacy-button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
+        outline: 2px solid #ffbf47;
+        outline-offset: 1px;
+      }
+      .legacy-table { width: 100%; border-collapse: collapse; background: white; }
+      .legacy-table th {
+        padding: 8px 9px;
+        border: 1px solid #9eacb7;
+        background: linear-gradient(#e8f0f6, var(--table-head));
+        color: #173b5c;
+        text-align: left;
+        font-size: 12px;
+      }
+      .legacy-table td { padding: 9px; border: 1px solid #c2ccd3; vertical-align: top; }
+      .legacy-table tbody tr:nth-child(even) { background: #f1f4f6; }
+      .status { display: inline-block; min-width: 86px; padding: 3px 7px; border: 1px solid; text-align: center; font-weight: bold; font-size: 11px; }
+      .status.ok { color: #315f34; border-color: #89a78b; background: #e8f2e8; }
+      .status.wait { color: #7a5a16; border-color: #cfb66c; background: #fff4ce; }
+      .status.changed { color: #7a3d27; border-color: #d1a08c; background: #fae9df; }
+      .demo-stamp { color: #9b1c1c; font-weight: bold; letter-spacing: .04em; }
+
+      /* Variant A: patient portal */
+      .portal-shell { min-height: calc(100vh - 27px); background: #e7decb; }
+      .portal-header {
+        height: 72px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 0 20px;
+        color: #fff;
+        background: linear-gradient(#426f58, #315844);
+        border-bottom: 4px solid #e2b447;
+        box-shadow: 0 2px 4px rgb(0 0 0 / .22);
+      }
+      .portal-title { line-height: 1.05; }
+      .portal-title strong { display: block; font-size: 24px; letter-spacing: .04em; }
+      .portal-title span { font-size: 12px; text-transform: uppercase; }
+      .portal-user { margin-left: auto; text-align: right; line-height: 1.7; }
+      .portal-user a { color: #fff; margin-left: 12px; }
+      .portal-layout { display: grid; grid-template-columns: 238px 1fr; min-height: calc(100vh - 128px); }
+      .portal-nav { background: var(--blue-dark); color: #e8f1f8; border-right: 1px solid #09273e; }
+      .portal-nav h2 { margin: 0; padding: 13px 16px; background: #192f25; font-size: 12px; font-weight: normal; text-transform: uppercase; }
+      .portal-nav ul { margin: 0; padding: 0; list-style: none; }
+      .portal-nav li { border-bottom: 1px solid rgb(255 255 255 / .11); }
+      .portal-nav a { display: block; min-height: 40px; padding: 12px 17px; color: inherit; text-decoration: none; }
+      .portal-nav li.active > a { background: var(--blue-active); border-left: 5px solid #f2c85d; padding-left: 12px; font-weight: bold; }
+      .portal-nav .subnav { background: #1c382b; }
+      .portal-nav .subnav a { min-height: 34px; padding: 9px 15px 9px 40px; color: #cfdfec; font-size: 12px; }
+      .portal-nav .subnav .selected { color: #fff; background: #142b21; }
+      .portal-main { padding: 17px 22px 76px; overflow: auto; background: #e7decb; }
+      .breadcrumb { padding: 6px 9px; border: 1px solid #b9aa91; background: #f5efe3; color: #60594e; font-size: 12px; }
+      .portal-main h1 { margin: 18px 0 5px; color: #294737; font-size: 22px; font-weight: normal; }
+      .portal-main .subtitle { margin: 0 0 15px; color: #655f55; }
+      .notice { margin-bottom: 14px; padding: 10px 12px; border: 1px solid #c9ad67; background: #f5e7b9; line-height: 1.45; }
+      .filter-box { margin-bottom: 14px; border: 1px solid #aa9b83; background: #faf6ec; }
+      .box-title { padding: 7px 10px; background: linear-gradient(#f7f1e5, #ded3bf); border-bottom: 1px solid #aa9b83; color: #315844; font-weight: bold; }
+      .filters { display: flex; align-items: end; gap: 13px; padding: 11px; }
+      .filters label { display: grid; gap: 4px; color: #46545e; font-weight: bold; font-size: 12px; }
+      .filters input, .filters select { height: 30px; min-width: 140px; padding: 4px 7px; border: 1px solid #8e9ba5; background: white; }
+      .result-summary { display: flex; justify-content: space-between; margin: 7px 0; color: #5f594f; }
+      .portal-main .legacy-table { background: #fbf8f1; }
+      .portal-main .legacy-table th { border-color: #aa9d88; background: linear-gradient(#f4eee2, #d9cdb8); color: #294737; }
+      .portal-main .legacy-table td { border-color: #c6baa5; }
+      .portal-main .legacy-table tbody tr:nth-child(even) { background: #eee6d8; }
+      .portal-footer { position: fixed; left: 238px; right: 0; bottom: 0; display: flex; justify-content: space-between; padding: 9px 18px 36px; border-top: 1px solid #aa9b83; background: #efe7d8; font-size: 11px; }
+
+      /* Variant B: administrative terminal */
+      .admin-shell { min-height: calc(100vh - 27px); background: #b9c0c5; color: #111; font-family: Tahoma, Arial, sans-serif; }
+      .admin-menu { height: 25px; padding: 5px 10px; background: #e6e6e6; border-bottom: 1px solid #777; box-shadow: inset 0 1px #fff; }
+      .admin-menu span { margin-right: 20px; }
+      .admin-toolbar { display: flex; align-items: center; gap: 4px; min-height: 54px; padding: 6px 9px; background: #d2d6d8; border-bottom: 1px solid #737b80; }
+      .tool { width: 74px; min-height: 42px; border: 1px solid #8b9296; background: linear-gradient(#fff, #c9ced1); font-size: 11px; cursor: pointer; }
+      .tool strong { display: block; color: #1d4e73; font-size: 17px; line-height: 15px; }
+      .admin-system { margin-left: auto; padding: 5px 9px; border: 1px inset #fff; background: #eceff1; }
+      .admin-workspace { display: grid; grid-template-columns: 205px 1fr 255px; gap: 5px; height: calc(100vh - 141px); padding: 5px; }
+      .tree, .admin-center, .detail-pane { border: 1px solid #69757d; background: #f4f5f5; overflow: auto; }
+      .window-title { padding: 5px 7px; color: #fff; background: linear-gradient(90deg, #164f7b, #76a2c0); font-weight: bold; }
+      .tree ul { margin: 0; padding: 7px 7px 7px 23px; list-style: square; line-height: 1.85; }
+      .tree li.active { color: #fff; background: #245f8e; }
+      .admin-filters { display: grid; grid-template-columns: repeat(4, minmax(120px, 1fr)) auto; gap: 7px; padding: 8px; border-bottom: 1px solid #8b969e; background: #dddfe0; }
+      .admin-filters label { display: grid; gap: 3px; font-size: 11px; }
+      .admin-filters input, .admin-filters select { height: 25px; border: 1px inset #bbb; background: #fff; }
+      .admin-table { font-size: 11px; }
+      .admin-table th, .admin-table td { padding: 5px 6px; }
+      .selected-row { color: #fff; background: #245f8e !important; }
+      .detail-body { padding: 10px; line-height: 1.5; }
+      .detail-body dl { display: grid; grid-template-columns: 95px 1fr; margin: 0; }
+      .detail-body dt { font-weight: bold; }
+      .detail-body dd { margin: 0; }
+      .detail-actions { display: grid; gap: 7px; margin-top: 15px; }
+      .admin-statusbar { display: flex; gap: 5px; height: 35px; padding: 5px; background: #d6d9db; border-top: 1px solid #747c81; }
+      .admin-statusbar span { padding: 4px 9px; border: 1px inset #fff; background: #e9ebec; }
+      .admin-statusbar .grow { flex: 1; }
+
+      /* Variant C: clinical desktop */
+      .clinical-shell { min-height: calc(100vh - 27px); background: #eef0ea; font-family: Verdana, Arial, sans-serif; }
+      .clinical-header { display: flex; align-items: center; min-height: 57px; padding: 8px 15px; color: #fff; background: #3d5d69; border-bottom: 3px solid #94a55d; }
+      .clinical-header .brand-mark { margin-right: 10px; color: #d9e5a5; }
+      .clinical-header strong { font-size: 19px; }
+      .clinical-header small { display: block; margin-top: 3px; }
+      .clinical-header .session { margin-left: auto; text-align: right; font-size: 11px; }
+      .module-tabs { display: flex; padding-left: 12px; background: #d5dbd5; border-bottom: 1px solid #87938c; }
+      .module-tabs a { min-width: 125px; padding: 9px 12px; border-right: 1px solid #9aa49e; color: #263a40; text-align: center; text-decoration: none; }
+      .module-tabs a.active { margin-bottom: -1px; background: #eef0ea; border-top: 3px solid #6c7f38; font-weight: bold; }
+      .clinical-layout { display: grid; grid-template-columns: 220px 1fr 245px; gap: 10px; padding: 10px 10px 60px; }
+      .clinical-panel { margin-bottom: 10px; border: 1px solid #8d9993; background: #fff; box-shadow: 1px 1px 2px rgb(0 0 0 / .12); }
+      .clinical-panel h2 { margin: 0; padding: 7px 9px; background: linear-gradient(#e7ebe6, #c5cec7); border-bottom: 1px solid #8d9993; color: #30474e; font-size: 12px; }
+      .quick-list { margin: 0; padding: 6px 8px; list-style: none; }
+      .quick-list li { padding: 7px 4px; border-bottom: 1px dotted #aeb8b1; }
+      .quick-list .active { border-left: 4px solid #7b9142; background: #edf1df; font-weight: bold; }
+      .clinical-content h1 { margin: 5px 0 11px; color: #30474e; font: 20px Georgia, serif; }
+      .day-strip { display: grid; grid-template-columns: repeat(5, 1fr); margin-bottom: 10px; border: 1px solid #8d9993; }
+      .day-strip div { padding: 8px; border-right: 1px solid #a9b2ac; background: #e5e9e5; text-align: center; }
+      .day-strip .today { color: #fff; background: #687b34; }
+      .appointment-card { display: grid; grid-template-columns: 80px 1fr 115px; margin-bottom: 7px; border: 1px solid #a8b2ac; background: #fff; }
+      .appointment-card .time { padding: 13px 8px; background: #e6eadb; border-right: 1px solid #b3bcaa; font-size: 18px; text-align: center; }
+      .appointment-card .summary { padding: 10px; line-height: 1.5; }
+      .appointment-card .state { display: grid; place-items: center; padding: 8px; border-left: 1px solid #c3cac5; }
+      .alert-list { margin: 0; padding: 9px 9px 9px 25px; line-height: 1.5; }
+      .service-row { display: flex; justify-content: space-between; padding: 6px 9px; border-bottom: 1px solid #d0d6d1; }
+      .lamp { color: #47734b; font-weight: bold; }
+      .clinical-footer { position: fixed; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-between; padding: 8px 14px 35px; color: #eaf0ea; background: #3d5d69; font-size: 11px; }
+
+      /* Prototype switcher */
+      .switcher {
+        position: fixed;
+        z-index: 100;
+        left: 50%;
+        bottom: 7px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 340px;
+        padding: 6px 8px;
+        transform: translateX(-50%);
+        color: #fff;
+        background: #17191c;
+        border: 1px solid #fff;
+        border-radius: 18px;
+        box-shadow: 0 3px 12px rgb(0 0 0 / .42);
+        font: 12px system-ui, sans-serif;
+      }
+      .switcher button { width: 34px; height: 28px; border: 0; border-radius: 13px; color: #fff; background: #424750; cursor: pointer; }
+      .switcher button:active { transform: scale(.96); }
+      .switcher-output { flex: 1; text-align: center; }
+      .switcher-output strong { display: block; }
+      .switcher-output span { color: #b9c0c8; font-size: 10px; }
+    </style>
+  </head>
+  <body>
+    <div class="prototype-note">PROTOTIPO DESCARTABLE — ENTORNO DE DEMOSTRACIÓN — TODOS LOS DATOS SON FICTICIOS</div>
+
+    <section class="variant" data-variant="A" aria-label="Variante A, portal institucional">
+      <div class="portal-shell">
+        <header class="portal-header">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+          <div class="portal-title"><strong>CLÍNICA SANTA LUCÍA</strong><span>Sistema Integrado de Atención</span></div>
+          <div class="portal-user">Bienvenido/a, Paciente Demo<br /><a>Ayuda</a><a>Cambiar clave</a><a>Salir</a></div>
+        </header>
+        <div class="portal-layout">
+          <nav class="portal-nav" aria-label="Módulos principales">
+            <h2>Menú principal</h2>
+            <ul>
+              <li><a>Inicio</a></li>
+              <li class="active"><a>Turnos &rsaquo;</a>
+                <ul class="subnav"><li><a class="selected">Mis próximos turnos</a></li><li><a>Solicitar turno</a></li><li><a>Historial</a></li></ul>
+              </li>
+              <li><a>Estudios</a></li><li><a>Historia clínica</a></li><li><a>Medicamentos</a></li><li><a>Cartilla médica</a></li><li><a>Facturación</a></li>
+            </ul>
+          </nav>
+          <main class="portal-main">
+            <div class="breadcrumb">Inicio &gt; Gestión de turnos &gt; Mis próximos turnos</div>
+            <h1>Mis próximos turnos</h1>
+            <p class="subtitle">Consulte aquí las citas programadas en las distintas sedes de la Clínica.</p>
+            <div class="notice"><strong>Importante:</strong> Preséntese 15 minutos antes con documento y credencial. Para cancelar o reprogramar un turno comuníquese con la central telefónica.</div>
+            <section class="filter-box">
+              <div class="box-title">Criterios de búsqueda</div>
+              <div class="filters">
+                <label>Desde <input value="20/10/2026" aria-label="Fecha desde" /></label>
+                <label>Hasta <input value="31/12/2026" aria-label="Fecha hasta" /></label>
+                <label>Especialidad <select aria-label="Especialidad"><option>Todas</option><option>Cardiología</option></select></label>
+                <button class="legacy-button">BUSCAR</button>
+              </div>
+            </section>
+            <div class="result-summary"><strong>Turnos encontrados: 3</strong><span>Última actualización: 20/10/2026 18:42</span></div>
+            <table class="legacy-table">
+              <thead><tr><th>Fecha</th><th>Hora</th><th>Especialidad / Estudio</th><th>Profesional</th><th>Sede</th><th>Estado</th><th>Acción</th></tr></thead>
+              <tbody>
+                <tr><td>23/10/2026</td><td>09:30</td><td><strong>Cardiología</strong></td><td>Dra. Laura Méndez</td><td>Sede Central</td><td><span class="status ok">CONFIRMADO</span></td><td><a>Ver detalle</a></td></tr>
+                <tr><td>29/10/2026</td><td>07:45</td><td><strong>Laboratorio</strong></td><td>Sector Extracciones</td><td>Anexo Norte</td><td><span class="status wait">PENDIENTE</span></td><td><a>Ver preparación</a></td></tr>
+                <tr><td>04/11/2026</td><td>16:10</td><td><strong>Diagnóstico por imágenes</strong></td><td>Dr. Martín Suárez</td><td>Sede Central</td><td><span class="status changed">REPROGRAMADO</span></td><td><a>Ver detalle</a></td></tr>
+              </tbody>
+            </table>
+          </main>
+        </div>
+        <footer class="portal-footer"><span><a>Términos y condiciones</a> | <a>Política de privacidad</a> | Mesa de ayuda: 0800-000-0000</span><span><b>Sistema HSL v1.0.0</b> | Entorno local | <span class="demo-stamp">DEMO</span></span></footer>
+      </div>
+    </section>
+
+    <section class="variant" data-variant="B" aria-label="Variante B, terminal administrativa">
+      <div class="admin-shell">
+        <div class="admin-menu"><span>Archivo</span><span>Pacientes</span><span>Agenda</span><span>Estudios</span><span>Informes</span><span>Herramientas</span><span>Ayuda</span></div>
+        <div class="admin-toolbar">
+          <button class="tool"><strong>+</strong>Nuevo turno</button><button class="tool"><strong>⌕</strong>Buscar</button><button class="tool"><strong>↻</strong>Actualizar</button><button class="tool"><strong>▣</strong>Imprimir</button><button class="tool"><strong>?</strong>Ayuda</button>
+          <div class="admin-system"><strong>HSL-AGENDA</strong><br />Terminal ADM-04</div>
+        </div>
+        <div class="admin-workspace">
+          <aside class="tree"><div class="window-title">Explorador de módulos</div><ul><li>Recepción</li><li class="active">Agenda de turnos</li><li>Pacientes</li><li>Profesionales</li><li>Estudios</li><li>Facturación</li><li>Reportes</li><li>Configuración</li></ul></aside>
+          <main class="admin-center">
+            <div class="window-title">Agenda general de turnos</div>
+            <div class="admin-filters">
+              <label>Fecha desde<input value="20/10/2026" /></label><label>Fecha hasta<input value="31/12/2026" /></label><label>Sede<select><option>Todas las sedes</option></select></label><label>Especialidad<select><option>Todas</option></select></label><button class="legacy-button">CONSULTAR</button>
+            </div>
+            <table class="legacy-table admin-table">
+              <thead><tr><th>ID</th><th>Fecha</th><th>Hora</th><th>Especialidad</th><th>Profesional</th><th>Sede</th><th>Estado</th></tr></thead>
+              <tbody>
+                <tr class="selected-row"><td>T-10482</td><td>23/10/2026</td><td>09:30</td><td>Cardiología</td><td>Dra. Laura Méndez</td><td>Central</td><td>Confirmado</td></tr>
+                <tr><td>T-10496</td><td>29/10/2026</td><td>07:45</td><td>Laboratorio</td><td>Extracciones</td><td>Anexo Norte</td><td>Pendiente</td></tr>
+                <tr><td>T-10511</td><td>04/11/2026</td><td>16:10</td><td>Imágenes</td><td>Dr. Martín Suárez</td><td>Central</td><td>Reprogramado</td></tr>
+              </tbody>
+            </table>
+          </main>
+          <aside class="detail-pane"><div class="window-title">Detalle del turno</div><div class="detail-body"><dl><dt>Número:</dt><dd>T-10482</dd><dt>Fecha:</dt><dd>23/10/2026</dd><dt>Hora:</dt><dd>09:30</dd><dt>Servicio:</dt><dd>Cardiología</dd><dt>Profesional:</dt><dd>Dra. Laura Méndez</dd><dt>Sede:</dt><dd>Central</dd><dt>Consultorio:</dt><dd>2B</dd><dt>Estado:</dt><dd>Confirmado</dd></dl><div class="detail-actions"><button class="legacy-button">VER COMPROBANTE</button><button class="legacy-button">IMPRIMIR</button></div><p class="demo-stamp">REGISTRO FICTICIO PARA DEMOSTRACIÓN</p></div></aside>
+        </div>
+        <footer class="admin-statusbar"><span class="grow">Conectado | Base: HSL_DEMO | Servicio disponible</span><span>Usuario: DEMO_ADMIN</span><span>20/10/2026 18:42</span><span>Sistema HSL v1.0.0</span></footer>
+      </div>
+    </section>
+
+    <section class="variant" data-variant="C" aria-label="Variante C, escritorio clínico">
+      <div class="clinical-shell">
+        <header class="clinical-header"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span><div><strong>Clínica Santa Lucía</strong><small>Estación de trabajo clínica — datos de demostración</small></div><div class="session">Sesión: PROF_DEMO<br />Sistema HSL v1.0.0 | LOCAL</div></header>
+        <nav class="module-tabs"><a>Resumen</a><a class="active">Agenda</a><a>Historia clínica</a><a>Estudios</a><a>Indicaciones</a><a>Informes</a></nav>
+        <div class="clinical-layout">
+          <aside>
+            <section class="clinical-panel"><h2>ACCESOS RÁPIDOS</h2><ul class="quick-list"><li>Inicio de jornada</li><li class="active">Agenda personal</li><li>Agenda por servicio</li><li>Resultados pendientes</li><li>Mensajería interna</li></ul></section>
+            <section class="clinical-panel"><h2>SEDE ACTIVA</h2><div style="padding:10px;line-height:1.6"><strong>Sede Central</strong><br />Sector: Consultorios<br />Puesto: CST-12</div></section>
+          </aside>
+          <main class="clinical-content">
+            <h1>Agenda de atención programada</h1>
+            <div class="day-strip"><div>Mar 20<br /><b>3 turnos</b></div><div>Mié 21<br /><b>5 turnos</b></div><div class="today">Jue 22<br /><b>HOY</b></div><div>Vie 23<br /><b>4 turnos</b></div><div>Lun 26<br /><b>6 turnos</b></div></div>
+            <article class="appointment-card"><div class="time">09:30</div><div class="summary"><strong>Cardiología — Consultorio 2B</strong><br />Profesional: Dra. Laura Méndez<br />Sede Central</div><div class="state"><span class="status ok">CONFIRMADO</span></div></article>
+            <article class="appointment-card"><div class="time">07:45</div><div class="summary"><strong>Laboratorio — Sector Extracciones</strong><br />Atención por orden de llegada<br />Anexo Norte</div><div class="state"><span class="status wait">PENDIENTE</span></div></article>
+            <article class="appointment-card"><div class="time">16:10</div><div class="summary"><strong>Diagnóstico por imágenes — Sala 3</strong><br />Profesional: Dr. Martín Suárez<br />Sede Central</div><div class="state"><span class="status changed">REPROGRAMADO</span></div></article>
+          </main>
+          <aside>
+            <section class="clinical-panel"><h2>AVISOS DEL SISTEMA</h2><ul class="alert-list"><li>Verificar identidad antes de iniciar la atención.</li><li>Mantenimiento programado: domingo 02:00.</li></ul></section>
+            <section class="clinical-panel"><h2>ESTADO DE SERVICIOS</h2><div class="service-row"><span>Agenda</span><span class="lamp">● En línea</span></div><div class="service-row"><span>Estudios</span><span class="lamp">● En línea</span></div><div class="service-row"><span>Mensajería</span><span class="lamp">● En línea</span></div></section>
+            <section class="clinical-panel"><h2>SEGURIDAD</h2><div style="padding:10px;line-height:1.5">No deje la sesión abierta sin supervisión.<br /><a>Bloquear terminal</a></div></section>
+          </aside>
+        </div>
+        <footer class="clinical-footer"><span>CLÍNICA SANTA LUCÍA — SISTEMA DE DEMOSTRACIÓN</span><span>Versión 1.0.0 | Entorno local | Sin datos reales</span></footer>
+      </div>
+    </section>
+
+    <div class="switcher" role="navigation" aria-label="Selector de variante del prototipo">
+      <button type="button" id="previous" aria-label="Variante anterior">&larr;</button>
+      <div class="switcher-output" aria-live="polite"><strong id="variant-name"></strong><span>Use las flechas del teclado para comparar</span></div>
+      <button type="button" id="next" aria-label="Variante siguiente">&rarr;</button>
+    </div>
+
+    <script>
+      const variants = [
+        { key: "A", name: "Portal institucional" },
+        { key: "B", name: "Terminal administrativa" },
+        { key: "C", name: "Escritorio clínico" },
+      ];
+
+      function selectedVariant() {
+        const requested = new URLSearchParams(window.location.search).get("variant")?.toUpperCase();
+        return variants.some(({ key }) => key === requested) ? requested : "A";
+      }
+
+      function renderVariant(key) {
+        document.querySelectorAll(".variant").forEach((node) => {
+          const selected = node.dataset.variant === key;
+          node.classList.toggle("active", selected);
+          node.setAttribute("aria-hidden", String(!selected));
+        });
+        const variant = variants.find((item) => item.key === key);
+        document.getElementById("variant-name").textContent = `${variant.key} · ${variant.name}`;
+        const url = new URL(window.location.href);
+        url.searchParams.set("variant", key);
+        window.history.replaceState({}, "", url);
+      }
+
+      function cycle(direction) {
+        const current = variants.findIndex(({ key }) => key === selectedVariant());
+        const next = (current + direction + variants.length) % variants.length;
+        renderVariant(variants[next].key);
+      }
+
+      document.getElementById("previous").addEventListener("click", () => cycle(-1));
+      document.getElementById("next").addEventListener("click", () => cycle(1));
+      document.addEventListener("keydown", (event) => {
+        if (["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement?.tagName) || document.activeElement?.isContentEditable) return;
+        if (event.key === "ArrowLeft") cycle(-1);
+        if (event.key === "ArrowRight") cycle(1);
+      });
+      renderVariant(selectedVariant());
+    </script>
+  </body>
+</html>

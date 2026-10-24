@@ -1,0 +1,12 @@
+.git
+.gitignore
+.env
+.env.*
+.phpunit.cache
+vendor
+coverage
+docs
+tests
+.DS_Store
+.idea
+.vscode

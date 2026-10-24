@@ -117,7 +117,14 @@ smoke_color()
     base_url=$(url_for_color "$color")
     version_json=$(curl --fail --silent --show-error --connect-timeout 2 --max-time 5 "$base_url/version")
     version=$(printf '%s' "$version_json" | json_string version)
-    [ -n "$version" ] || { echo "ERROR: ${color} no informa versión" >&2; return 1; }
+    commit_sha=$(printf '%s' "$version_json" | json_string commitSha)
+    build_time=$(printf '%s' "$version_json" | json_string buildTime)
+    if [ -z "$version" ] || [ "$version" = dev ] \
+        || [ -z "$commit_sha" ] || [ "$commit_sha" = unknown ] \
+        || [ -z "$build_time" ] || [ "$build_time" = unknown ]; then
+        echo "ERROR: ${color} tiene metadatos de release incompletos" >&2
+        return 1
+    fi
     "$ROOT_DIR/tests/Contract/container-smoke.sh" "$base_url" "$version"
 }
 

@@ -74,6 +74,20 @@ final class BlueGreenLabTest extends TestCase
         self::assertStringContainsString('GREEN_IMAGE=', $state);
     }
 
+    public function testLocalBuildAndSmokeRequireReleaseMetadata(): void
+    {
+        $buildPath = $this->root . '/scripts/build-local-image';
+        $build = $this->readRequiredFile('scripts/build-local-image');
+        $common = $this->readRequiredFile('deploy/bin/_common.sh');
+
+        self::assertTrue(is_executable($buildPath));
+        self::assertStringContainsString('--build-arg APP_VERSION=', $build);
+        self::assertStringContainsString('--build-arg APP_COMMIT_SHA=', $build);
+        self::assertStringContainsString('--build-arg APP_BUILD_TIME=', $build);
+        self::assertStringContainsString('git rev-parse', $build);
+        self::assertStringContainsString('metadatos de release incompletos', $common);
+    }
+
     private function readRequiredFile(string $relativePath): string
     {
         $path = $this->root . '/' . $relativePath;

@@ -51,7 +51,7 @@ Los argumentos `APP_VERSION`, `APP_COMMIT_SHA` y `APP_BUILD_TIME` identifican el
 Construir la imagen que utilizarán ambos slots e iniciar el laboratorio:
 
 ```bash
-docker build -t hospital-st-lucia:local .
+scripts/build-local-image 1.0.0
 mkdir -p deploy/runtime
 cp deploy/state.env.example deploy/runtime/state.env
 docker compose --env-file deploy/runtime/state.env up -d --build

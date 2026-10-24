@@ -10,6 +10,7 @@ ENV APP_VERSION="$APP_VERSION" \
     DEPLOYMENT_COLOR=local
 
 RUN sed -ri 's/^Listen 80$/Listen 8080/' /etc/apache2/ports.conf \
+    && printf 'expose_php=Off\n' > /usr/local/etc/php/conf.d/security.ini \
     && mkdir -p /var/run/apache2 /var/lock/apache2 /var/log/apache2 \
     && chown -R www-data:www-data /var/run/apache2 /var/lock/apache2 /var/log/apache2
 

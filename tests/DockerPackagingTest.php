@@ -28,6 +28,15 @@ final class DockerPackagingTest extends TestCase
         self::assertStringContainsString('DocumentRoot /var/www/html/public', $config);
         self::assertStringContainsString('Options -Indexes', $config);
         self::assertStringContainsString('FallbackResource /index.php', $config);
+        self::assertStringContainsString('ServerTokens Prod', $config);
+        self::assertStringContainsString('ServerSignature Off', $config);
+    }
+
+    public function testPhpVersionIsNotExposedInHttpHeaders(): void
+    {
+        $dockerfile = $this->readRequiredFile(dirname(__DIR__) . '/Dockerfile');
+
+        self::assertStringContainsString('expose_php=Off', $dockerfile);
     }
 
     public function testDockerContextExcludesLocalAndSensitiveFiles(): void

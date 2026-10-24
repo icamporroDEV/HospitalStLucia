@@ -43,6 +43,7 @@ final class BlueGreenLabTest extends TestCase
         self::assertStringContainsString('nginx-unprivileged:', $dockerfile);
         self::assertStringContainsString('USER 101', $dockerfile);
         self::assertStringContainsString('listen 8080', $config);
+        self::assertStringContainsString('server_tokens off', $config);
         self::assertStringContainsString('/etc/nginx/active/active.conf', $config);
         self::assertStringContainsString('server his-blue:8080', $blue);
         self::assertStringContainsString('server his-green:8080', $green);

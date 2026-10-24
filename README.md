@@ -46,6 +46,35 @@ tests/Contract/container-smoke.sh http://127.0.0.1:8080 1.0.0
 
 Los argumentos `APP_VERSION`, `APP_COMMIT_SHA` y `APP_BUILD_TIME` identifican el artefacto inmutable. `DEPLOYMENT_COLOR` es configuración de ejecución porque la misma imagen puede desplegarse como Blue o Green.
 
+## Laboratorio Blue-Green local
+
+Construir la imagen que utilizarán ambos slots e iniciar el laboratorio:
+
+```bash
+docker build -t hospital-st-lucia:local .
+mkdir -p deploy/runtime
+cp deploy/state.env.example deploy/runtime/state.env
+docker compose --env-file deploy/runtime/state.env up -d --build
+```
+
+La URL pública es `http://127.0.0.1:8080`. Blue y Green quedan disponibles solamente desde la máquina local en los puertos `18081` y `18082` para diagnóstico.
+
+Cambiar a Green y volver a Blue:
+
+```bash
+deploy/bin/current-color
+deploy/bin/switch-color green
+deploy/bin/rollback-color blue
+```
+
+Validar el ciclo completo desde un volumen limpio:
+
+```bash
+tests/Contract/blue-green-smoke.sh
+```
+
+La explicación de cada operación y del despliegue de una imagen candidata está en [`deploy/README.md`](deploy/README.md).
+
 ## Rutas
 
 | Ruta | Uso |

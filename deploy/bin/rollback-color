@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -eu
+
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+. "$SCRIPT_DIR/_common.sh"
+
+lkg=${1:?Uso: rollback-color <blue|green>}
+validate_color "$lkg"
+from=$(current_color)
+
+"$SCRIPT_DIR/switch-color" "$lkg"
+echo "Rollback OK: ${from} -> ${lkg} at $(date -u +%Y-%m-%dT%H:%M:%SZ)"

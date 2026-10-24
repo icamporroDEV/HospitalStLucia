@@ -1,0 +1,39 @@
+#!/bin/sh
+
+set -eu
+
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+. "$SCRIPT_DIR/_common.sh"
+
+target=${1:?Uso: switch-color <blue|green>}
+validate_color "$target"
+
+service=$(service_for_color "$target")
+wait_healthy "$service"
+smoke_color "$target"
+previous=$(current_color)
+
+compose exec -T nginx sh -eu -c "
+    cp /etc/nginx/active/active.conf /etc/nginx/active/active.conf.previous
+    cp /etc/nginx/upstreams/${target}.conf /etc/nginx/active/active.conf.next
+    mv /etc/nginx/active/active.conf.next /etc/nginx/active/active.conf
+    if ! nginx -t || ! nginx -s reload; then
+        mv /etc/nginx/active/active.conf.previous /etc/nginx/active/active.conf
+        nginx -t
+        nginx -s reload
+        exit 1
+    fi
+"
+
+if ! wait_public_color "$target"; then
+    compose exec -T nginx sh -eu -c '
+        mv /etc/nginx/active/active.conf.previous /etc/nginx/active/active.conf
+        nginx -t
+        nginx -s reload
+    '
+    echo "ERROR: el tráfico no cambió a ${target}; se restauró ${previous}" >&2
+    exit 1
+fi
+
+compose exec -T nginx rm -f /etc/nginx/active/active.conf.previous
+echo "Switch OK: ${previous} -> ${target}"

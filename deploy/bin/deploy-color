@@ -1,0 +1,50 @@
+#!/bin/sh
+
+set -eu
+
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+. "$SCRIPT_DIR/_common.sh"
+
+color=${1:?Uso: deploy-color <blue|green> <image>}
+image=${2:?Uso: deploy-color <blue|green> <image>}
+validate_color "$color"
+validate_image "$image"
+ensure_state
+
+active=$(current_color)
+[ "$color" != "$active" ] || {
+    echo "ERROR: no se despliega sobre el color activo (${active})" >&2
+    exit 1
+}
+
+service=$(service_for_color "$color")
+case "$color" in
+    blue) key=BLUE_IMAGE ;;
+    green) key=GREEN_IMAGE ;;
+esac
+
+backup="$STATE_FILE.previous"
+cp "$STATE_FILE" "$backup"
+update_state "$key" "$image"
+
+restore_previous_slot()
+{
+    cp "$backup" "$STATE_FILE"
+    compose up -d --no-deps --force-recreate "$service" >/dev/null 2>&1 || true
+    rm -f "$backup"
+}
+
+if ! compose up -d --no-deps --force-recreate "$service"; then
+    restore_previous_slot
+    echo "ERROR: no se pudo desplegar ${image} en ${color}" >&2
+    exit 1
+fi
+
+if ! wait_healthy "$service" || ! smoke_color "$color"; then
+    restore_previous_slot
+    echo "ERROR: el candidato ${image} no superó la validación" >&2
+    exit 1
+fi
+
+rm -f "$backup"
+echo "Deploy OK: ${image} quedó validada en ${color} sin cambiar tráfico"

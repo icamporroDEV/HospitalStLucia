@@ -2,6 +2,7 @@
 /.phpunit.cache/
 /coverage/
 /vendor/
+/deploy/runtime/
 
 .DS_Store
 .idea/

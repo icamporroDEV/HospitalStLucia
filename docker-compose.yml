@@ -1,0 +1,65 @@
+services:
+  his-blue:
+    image: ${BLUE_IMAGE:-hospital-st-lucia:local}
+    environment:
+      DEPLOYMENT_COLOR: blue
+    ports:
+      - "127.0.0.1:18081:8080"
+    read_only: true
+    tmpfs:
+      - /var/run/apache2:uid=33,gid=33,mode=755
+      - /var/lock/apache2:uid=33,gid=33,mode=755
+      - /var/log/apache2:uid=33,gid=33,mode=755
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    networks:
+      - his-internal
+
+  his-green:
+    image: ${GREEN_IMAGE:-hospital-st-lucia:local}
+    environment:
+      DEPLOYMENT_COLOR: green
+    ports:
+      - "127.0.0.1:18082:8080"
+    read_only: true
+    tmpfs:
+      - /var/run/apache2:uid=33,gid=33,mode=755
+      - /var/lock/apache2:uid=33,gid=33,mode=755
+      - /var/log/apache2:uid=33,gid=33,mode=755
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    networks:
+      - his-internal
+
+  nginx:
+    build:
+      context: nginx
+    depends_on:
+      his-blue:
+        condition: service_healthy
+      his-green:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8080:8080"
+    read_only: true
+    tmpfs:
+      - /tmp:uid=101,gid=101,mode=755
+    volumes:
+      - nginx-active-config:/etc/nginx/active
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    networks:
+      - his-internal
+
+networks:
+  his-internal:
+    driver: bridge
+
+volumes:
+  nginx-active-config:

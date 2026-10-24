@@ -24,6 +24,28 @@ docker run --rm -v "$PWD:/app" -w /app composer:2 test
 docker run --rm -p 8080:8080 -v "$PWD:/app" -w /app php:8.3-cli php -S 0.0.0.0:8080 -t public
 ```
 
+## Construir la imagen de la aplicación
+
+La imagen contiene solamente Apache, PHP y los archivos necesarios para ejecutar la demo. La versión, el commit y la fecha quedan grabados al construirla:
+
+```bash
+docker build --build-arg APP_VERSION=1.0.0 --build-arg APP_COMMIT_SHA="$(git rev-parse --short HEAD)" --build-arg APP_BUILD_TIME="$(date -u +%Y-%m-%dT%H:%M:%SZ)" -t hospital-st-lucia:1.0.0 .
+```
+
+Ejecutar la imagen indicando el color del entorno:
+
+```bash
+docker run --rm --name hospital-his -p 8080:8080 -e DEPLOYMENT_COLOR=blue hospital-st-lucia:1.0.0
+```
+
+En otra terminal, validar el mismo contrato que utilizará Jenkins:
+
+```bash
+tests/Contract/container-smoke.sh http://127.0.0.1:8080 1.0.0
+```
+
+Los argumentos `APP_VERSION`, `APP_COMMIT_SHA` y `APP_BUILD_TIME` identifican el artefacto inmutable. `DEPLOYMENT_COLOR` es configuración de ejecución porque la misma imagen puede desplegarse como Blue o Green.
+
 ## Rutas
 
 | Ruta | Uso |
@@ -43,4 +65,7 @@ data/appointments.php       Datos ficticios
 public/index.php            Toda la aplicación y sus rutas
 public/assets/legacy.css    Diseño A aprobado
 tests/DemoTest.php          Prueba básica del dataset
+Dockerfile                  Imagen reproducible de la aplicación
+apache/000-default.conf     Virtual host limitado a public/
+tests/Contract/             Smoke test externo del contenedor
 ```

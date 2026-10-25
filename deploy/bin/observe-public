@@ -1,0 +1,47 @@
+#!/bin/sh
+
+set -eu
+
+expected_version=${1:?Uso: observe-public <version-esperada>}
+public_url=${PUBLIC_URL:-http://127.0.0.1:8080}
+observation_seconds=${OBSERVATION_SECONDS:-20}
+
+case "$observation_seconds" in
+    ''|*[!0-9]*) echo "ERROR: OBSERVATION_SECONDS debe ser un entero positivo" >&2; exit 1 ;;
+esac
+[ "$observation_seconds" -gt 0 ] || {
+    echo "ERROR: OBSERVATION_SECONDS debe ser mayor que cero" >&2
+    exit 1
+}
+
+check_public()
+{
+    version=$(curl --fail --silent --show-error --connect-timeout 1 --max-time 2 \
+        "$public_url/version") || return 1
+    printf '%s' "$version" | grep -Fq "\"version\":\"${expected_version}\"" \
+        || return 1
+
+    appointments=$(curl --fail --silent --show-error --connect-timeout 1 --max-time 2 \
+        "$public_url/api/turnos") || return 1
+    printf '%s' "$appointments" | grep -Eq '"id"[[:space:]]*:[[:space:]]*"T-[0-9]+"'
+}
+
+attempt=1
+consecutive_failures=0
+while [ "$attempt" -le "$observation_seconds" ]; do
+    if check_public; then
+        consecutive_failures=0
+        echo "Observación ${attempt}/${observation_seconds}: OK"
+    else
+        consecutive_failures=$((consecutive_failures + 1))
+        echo "Observación ${attempt}/${observation_seconds}: fallo ${consecutive_failures}/3" >&2
+        [ "$consecutive_failures" -lt 3 ] || {
+            echo "ERROR: tres fallos consecutivos tras el cambio de tráfico" >&2
+            exit 1
+        }
+    fi
+    attempt=$((attempt + 1))
+    [ "$attempt" -gt "$observation_seconds" ] || sleep 1
+done
+
+echo "Observación OK: ${expected_version} permaneció disponible"

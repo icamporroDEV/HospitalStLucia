@@ -9,6 +9,8 @@ STATE_DIR="$ROOT_DIR/deploy/runtime"
 STATE_FILE="$STATE_DIR/state.env"
 STATE_EXAMPLE="$ROOT_DIR/deploy/state.env.example"
 PUBLIC_URL=${PUBLIC_URL:-http://127.0.0.1:8080}
+BLUE_URL=${BLUE_URL:-http://127.0.0.1:18081}
+GREEN_URL=${GREEN_URL:-http://127.0.0.1:18082}
 
 ensure_state()
 {
@@ -49,8 +51,8 @@ service_for_color()
 url_for_color()
 {
     case "$1" in
-        blue) printf 'http://127.0.0.1:18081\n' ;;
-        green) printf 'http://127.0.0.1:18082\n' ;;
+        blue) printf '%s\n' "$BLUE_URL" ;;
+        green) printf '%s\n' "$GREEN_URL" ;;
         *) validate_color "$1" ;;
     esac
 }

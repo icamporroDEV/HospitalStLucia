@@ -42,9 +42,10 @@ pipeline {
             steps {
                 sh '''
                     set -eu
-                    mkdir -p deploy/runtime
-                    if [ ! -f deploy/runtime/state.env ]; then
-                        cp deploy/state.env.example deploy/runtime/state.env
+                    state_file="${HIS_STATE_FILE:-deploy/runtime/state.env}"
+                    mkdir -p "$(dirname "$state_file")"
+                    if [ ! -f "$state_file" ]; then
+                        cp deploy/state.env.example "$state_file"
                     fi
                     network="${COMPOSE_PROJECT_NAME}_his-internal"
                     docker network inspect "$network" >/dev/null

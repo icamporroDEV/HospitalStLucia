@@ -5,8 +5,8 @@ set -eu
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 ROOT_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/../.." && pwd)
 COMPOSE_FILE="$ROOT_DIR/docker-compose.yml"
-STATE_DIR="$ROOT_DIR/deploy/runtime"
-STATE_FILE="$STATE_DIR/state.env"
+STATE_FILE=${HIS_STATE_FILE:-$ROOT_DIR/deploy/runtime/state.env}
+STATE_DIR=$(dirname -- "$STATE_FILE")
 STATE_EXAMPLE="$ROOT_DIR/deploy/state.env.example"
 PUBLIC_URL=${PUBLIC_URL:-http://127.0.0.1:8080}
 BLUE_URL=${BLUE_URL:-http://127.0.0.1:18081}

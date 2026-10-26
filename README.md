@@ -79,6 +79,8 @@ La toma de muestras externas, los CSV y el cálculo de métricas para las nueve 
 
 Los resultados de las nueve corridas locales, con CSV y logs de Jenkins, están en [`docs/evidence/blue-green-local-2026-10-25/README.md`](docs/evidence/blue-green-local-2026-10-25/README.md).
 
+La reproducción del laboratorio en una VM EC2 está descrita en [`docs/vm-demo.md`](docs/vm-demo.md). El asistente interactivo `scripts/aws-ec2-wizard.sh` guía los pasos de la consola AWS desde Git Bash; solo guarda región, dirección de la VM y ruta local de la clave en `.env.vm` (ignorado por Git).
+
 ## Rutas
 
 | Ruta | Uso |

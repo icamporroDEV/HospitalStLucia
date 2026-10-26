@@ -104,8 +104,8 @@ Abrir `http://localhost:28080/version` para la aplicación y `http://localhost:2
 1. Desbloquear Jenkins con la contraseña inicial, instalar los plugins sugeridos y crear una cuenta de administración personal. Comprobar que **Pipeline** y **Git** estén disponibles.
 2. Crear una tarea **Pipeline**, por ejemplo `hospital-vm`.
 3. En **Pipeline → Definition**, elegir **Pipeline script from SCM**. SCM: Git. URL: `https://github.com/valenchillemi/HospitalStLucia.git`. Branch: `*/codex/jenkins-blue-green`. Script Path: `Jenkinsfile`.
-4. Guardar y ejecutar **Build with Parameters → happy**. Verificar `Finished: SUCCESS`, que `/version` muestre el nuevo color y que `/api/turnos` siga en 200.
-5. Para mostrar rechazo previo y rollback, ejecutar `pre-test` y `post-deploy`. Sus resultados `FAILURE` son esperados; verificar el color público antes/después y el registro `Rollback OK` en el último.
+4. Guardar y ejecutar **Build with Parameters → happy**. Después del smoke test, revisar la versión y el commit en **Autorizar cambio de tráfico**. Iniciar sesión como el ID permitido en `PROMOTION_APPROVERS` del `Jenkinsfile` y elegir **Aprobar cambio** dentro de 10 minutos. Verificar `CAMBIO_APROBADO`, `Finished: SUCCESS`, el nuevo color de `/version` y que `/api/turnos` siga en 200. Ver [guía del gate](approval-gate.md).
+5. Para mostrar rechazo previo y rollback, ejecutar `pre-test` y `post-deploy`. `pre-test` falla antes del gate; `post-deploy` requiere aprobación antes del cambio. Sus resultados `FAILURE` son esperados; verificar el color público antes/después y el registro `Rollback OK` en el último. Rechazo manual y timeout deben ensayarse por separado: ninguno debe cambiar la URL pública.
 
 Con el túnel activo, el monitor externo en la PC puede consultar `http://127.0.0.1:28080` con `scripts/availability_monitor.py`, igual que en [las pruebas locales](monitoring.md). Guardar capturas del Console Output, CSV y `/version` como evidencia de la VM, indicando región, tipo de instancia y commit. La vista del navegador y el monitor están fuera de la VM aunque el acceso viaje por SSH.
 

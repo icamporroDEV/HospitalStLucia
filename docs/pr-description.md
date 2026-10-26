@@ -1,7 +1,7 @@
 ## Summary
 
 ```text
-Jenkinsfile                 Pipeline A/B/C: pruebas, candidata, switch y rollback
+Jenkinsfile                 Pruebas → candidata → aprobación → switch → observación/rollback
 deploy/ y docker-compose*  Slots Blue/Green, Nginx y laboratorio EC2 rootless
 scripts/                   Monitor externo y guía interactiva de EC2
 docs/                      Informe final, guion y evidencias reproducibles
@@ -16,6 +16,7 @@ La PoC usa datos ficticios y no modifica un HIS de producción.
 - **Después, EC2:** Jenkins #7 `SUCCESS` en 39 s, Blue → Green, 0/86 errores HTTP con timeout externo de 5 s. Jenkins #3 ejecutó rollback Blue → Green; recuperación observada 3,907 s. CSV y límites metodológicos en [evidencia VM](https://github.com/valenchillemi/HospitalStLucia/blob/1185a56/docs/evidence/blue-green-vm-2026-10-25/README.md).
 - [Informe final editable](https://github.com/valenchillemi/HospitalStLucia/blob/1185a56/docs/informe-final.docx) · [Markdown](https://github.com/valenchillemi/HospitalStLucia/blob/1185a56/docs/informe-final.md) · [índice de entrega](https://github.com/valenchillemi/HospitalStLucia/blob/1185a56/docs/entrega.md).
 - El build VM #2 terminó en `FAILURE` esperado antes del despliegue (2 s) y el #6 en `SUCCESS` (39 s). El [log #6 y extracto #2](https://github.com/valenchillemi/HospitalStLucia/blob/codex/jenkins-blue-green/docs/evidence/blue-green-vm-2026-10-25/README.md) acompañan los CSV.
+- **Corrección posterior del profesor:** el `Jenkinsfile` ahora espera autorización del ID de laboratorio `clinica-santa-lucia` hasta 10 minutos antes del switch y registra build, versión, commit, aprobador y fecha UTC. Rechazo y timeout no promueven la candidata. La [guía del gate](https://github.com/valenchillemi/HospitalStLucia/blob/codex/jenkins-blue-green/docs/approval-gate.md) define los ensayos pendientes; las corridas históricas no prueban este control nuevo.
 - La [planificación de costos](https://github.com/valenchillemi/HospitalStLucia/blob/codex/jenkins-blue-green/docs/plan-costos-consultoria.md) estima honorarios de la consultora y consumo incremental de AWS, separado de la cuenta Free de la demo.
 - Pendiente de la entrega grupal: validar las hipótesis de capacidad con la clínica, confirmar Gantt y actualizar las tarjetas Trello. La [captura del tablero](https://github.com/valenchillemi/HospitalStLucia/blob/codex/jenkins-blue-green/docs/evidence/kanban-2026-10-25.png) muestra 4 Por hacer, 0 En curso, 1 A validar y 13 Completado.
 
@@ -23,4 +24,4 @@ La PoC usa datos ficticios y no modifica un HIS de producción.
 
 **Door:** two-way. El cambio se puede revertir por commit; la VM de demostración queda fuera del repositorio.
 
-**Blast Radius:** laboratorio. La imagen y Jenkins usan Docker; la rama no incorpora datos clínicos reales. Revisar la configuración del socket rootless y el flujo de rollback antes de integrar.
+**Blast Radius:** laboratorio. La imagen y Jenkins usan Docker; la rama no incorpora datos clínicos reales. El nuevo gate puede detener una promoción si el usuario permitido no aprueba a tiempo. Revisar la configuración de identidad Jenkins, el socket rootless y el flujo de rollback antes de integrar.

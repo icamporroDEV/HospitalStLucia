@@ -4,7 +4,7 @@ pipeline {
     options {
         disableConcurrentBuilds()
         skipDefaultCheckout(true)
-        timeout(time: 15, unit: 'MINUTES')
+        timeout(time: 30, unit: 'MINUTES')
     }
 
     parameters {
@@ -17,6 +17,7 @@ pipeline {
         PUBLIC_URL = 'http://nginx:8080'
         BLUE_URL = 'http://his-blue:8080'
         GREEN_URL = 'http://his-green:8080'
+        PROMOTION_APPROVERS = 'clinica-santa-lucia'
     }
 
     stages {
@@ -67,6 +68,7 @@ pipeline {
             steps {
                 script {
                     def shortSha = sh(script: 'git rev-parse --short=12 HEAD', returnStdout: true).trim()
+                    env.RELEASE_SHA = shortSha
                     env.RELEASE_VERSION = "ci-${env.BUILD_NUMBER}-${shortSha}"
                     env.RELEASE_IMAGE = "hospital-st-lucia:${env.RELEASE_VERSION}"
                 }
@@ -100,9 +102,48 @@ pipeline {
             }
         }
 
+        stage('Autorizar cambio de tráfico') {
+            steps {
+                script {
+                    echo "CAMBIO_SOLICITADO build=${env.BUILD_NUMBER} version=${env.RELEASE_VERSION} commit=${env.RELEASE_SHA} activo=${env.LKG_COLOR} candidato=${env.TARGET_COLOR} fecha_utc=${sh(script: 'date -u +%Y-%m-%dT%H:%M:%SZ', returnStdout: true).trim()}"
+                    try {
+                        def approvedBy = timeout(time: 10, unit: 'MINUTES') {
+                            input(
+                                message: "¿Aprobar ${env.RELEASE_VERSION} (commit ${env.RELEASE_SHA}) para cambiar de ${env.LKG_COLOR} a ${env.TARGET_COLOR}? Escenario: ${params.DEMO_SCENARIO}",
+                                ok: 'Aprobar cambio',
+                                submitter: env.PROMOTION_APPROVERS,
+                                submitterParameter: 'APPROVED_BY'
+                            )
+                        }
+                        if (!approvedBy?.toString()?.trim()) {
+                            error('Jenkins no informó el usuario aprobador; no se cambia el tráfico.')
+                        }
+                        env.APPROVED_BY = approvedBy.toString().trim()
+                        env.APPROVED_AT_UTC = sh(script: 'date -u +%Y-%m-%dT%H:%M:%SZ', returnStdout: true).trim()
+                        echo "CAMBIO_APROBADO build=${env.BUILD_NUMBER} version=${env.RELEASE_VERSION} commit=${env.RELEASE_SHA} usuario=${env.APPROVED_BY} fecha_utc=${env.APPROVED_AT_UTC} destino=${env.TARGET_COLOR}"
+                    } catch (err) {
+                        echo "CAMBIO_NO_APROBADO build=${env.BUILD_NUMBER} version=${env.RELEASE_VERSION} commit=${env.RELEASE_SHA} fecha_utc=${sh(script: 'date -u +%Y-%m-%dT%H:%M:%SZ', returnStdout: true).trim()} motivo=rechazo_plazo_o_error; permanece=${env.LKG_COLOR}"
+                        throw err
+                    }
+                }
+            }
+        }
+
         stage('Cambiar tráfico y observar') {
             steps {
                 script {
+                    def activeColor = sh(script: './deploy/bin/current-color', returnStdout: true).trim()
+                    if (activeColor != env.LKG_COLOR) {
+                        error("El color activo cambió durante la autorización (${env.LKG_COLOR} -> ${activeColor}); no se promueve la candidata.")
+                    }
+                    sh '''
+                        case "$TARGET_COLOR" in
+                            blue) target_url=$BLUE_URL ;;
+                            green) target_url=$GREEN_URL ;;
+                            *) exit 1 ;;
+                        esac
+                        tests/Contract/container-smoke.sh "$target_url" "$RELEASE_VERSION"
+                    '''
                     boolean switched = false
                     try {
                         sh './deploy/bin/switch-color "$TARGET_COLOR"'

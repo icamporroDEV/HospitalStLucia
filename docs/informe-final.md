@@ -38,11 +38,13 @@ El experimento usa una aplicación PHP y Apache sin persistencia, con tres turno
 
 La imagen se construye con `APP_VERSION`, `APP_COMMIT_SHA` y `APP_BUILD_TIME`; el color se aporta al ejecutar el contenedor. El estado de Blue y Green se conserva en `deploy/runtime/state.env`, que no se versiona. Los scripts rechazan un despliegue directo sobre el color activo. El cambio de tráfico valida el destino antes de recargar Nginx. En la VM, Jenkins usa el socket del daemon Docker rootless del usuario SSH y sus datos persisten en `deploy/runtime/jenkins-home`.
 
-El acceso público de la VM se expuso solo mediante túnel SSH hacia los puertos de loopback. El monitor corrió en Windows, fuera de Jenkins y fuera de la VM. Esta disposición permitió medir la respuesta que veía un cliente externo al laboratorio, aunque añadió latencia de túnel a las mediciones.
+Durante las corridas documentadas de la VM, el acceso se realizó mediante túnel SSH hacia los puertos de loopback. El monitor corrió en Windows, fuera de Jenkins y fuera de la VM. Esta disposición permitió medir la respuesta que veía ese cliente externo al laboratorio, aunque añadió latencia de túnel a las mediciones.
 
 ## 3. Flujo de entrega y escenarios
 
-El `Jenkinsfile` ejecuta: obtención del commit; instalación y pruebas PHP; conexión a la red del laboratorio; construcción de la candidata; despliegue en el color inactivo; smoke test funcional; cambio de tráfico; observación de la URL pública. Registra `PIPELINE_DURATION_SECONDS` al finalizar. El valor de `/version` permite vincular cada observación con el build y el commit.
+El `Jenkinsfile` ejecuta: obtención del commit; instalación y pruebas PHP; conexión a la red del laboratorio; construcción de la candidata; despliegue en el color inactivo; smoke test funcional; **autorización manual**; cambio de tráfico; observación de la URL pública. El nuevo gate muestra versión, commit y color candidato, espera hasta 10 minutos la respuesta del ID `clinica-santa-lucia` y registra usuario y fecha UTC al aprobar. Si se rechaza o vence el plazo, no ejecuta el switch. Antes de promover vuelve a comprobar el color activo y el smoke test. Registra `PIPELINE_DURATION_SECONDS` al finalizar. El valor de `/version` permite vincular cada observación con el build y el commit.
+
+La autorización se agregó **después** de las corridas cuantificadas en las secciones 5 y 6; esas cifras no prueban todavía el gate. Su ensayo de aprobación, rechazo y vencimiento, con nueva evidencia de Jenkins y `/version`, está pendiente. Ver la [guía de autorización](approval-gate.md).
 
 | Escenario | Estímulo | Resultado esperado y observado |
 | --- | --- | --- |
@@ -89,6 +91,7 @@ En el build #3, el tercer fallo de Jenkins quedó registrado a las `01:54:46.630
 | Objetivo de la segunda entrega | Evaluación |
 | --- | --- |
 | Pipeline de build, pruebas, despliegue inactivo, validación, switch y observación | Implementado en `Jenkinsfile` y ejecutado localmente y en EC2. |
+| Autorización antes de cambiar tráfico | Incorporada al `Jenkinsfile` después de las corridas informadas; falta ensayar aprobación, rechazo y timeout en Jenkins. |
 | Identificar Active, Release Candidate y LKG | Versión y commit visibles; color activo y objetivo en logs; rollback recibe el color estable previo. |
 | Demostrar los escenarios A, B y C | Tres repeticiones por escenario en local; en VM hay CSV de los tres escenarios, con resultado y duración confirmados para #2, #3, #5, #6 y #7. |
 | Medir HTTP, MTTD, recuperación, duración y versión | CSV externos, resúmenes, logs Jenkins y `/version` conservados. |

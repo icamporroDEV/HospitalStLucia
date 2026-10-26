@@ -9,6 +9,7 @@
 | Presupuesto de consultoría y AWS incremental | [Plan de costos](plan-costos-consultoria.md) | Horas, tarifa hipotética, componentes adicionales y fórmula del primer año. |
 | Cuenta de demostración | [Consulta opcional](costos-aws.md) | Gasto y créditos de la cuenta Free; no determina el precio para la clínica. |
 | Reproducción técnica | [Guía VM](vm-demo.md), [guía de despliegue](../deploy/README.md) y [monitoreo](monitoring.md) | Configuración, escenarios y comandos. |
+| Autorización de promoción | [Guía del gate](approval-gate.md) | Aprobador permitido, plazo, auditoría y ensayos de aprobación, rechazo y vencimiento. |
 | Presentación oral | [Guion de demo](guion-demo.md) | Secuencia sugerida, cifras que mostrar y aclaraciones metodológicas. |
 | Trabajo propuesto para integrar | [PR #4](https://github.com/icamporroDEV/HospitalStLucia/pull/4) | Pipeline, laboratorio y documentación; requiere revisión del propietario. |
 | Descripción del PR | [Texto listo para pegar](pr-description.md) | Resumen, evidencia y alcance del cambio. |
@@ -16,6 +17,7 @@
 ## Datos que debe confirmar el grupo antes de entregar
 
 - Datos de carga, región y arquitectura AWS de la clínica para convertir el modelo incremental en una cotización definitiva.
+- Ensayar el gate nuevo en Jenkins local y EC2; guardar Console Output y `/version` antes y después de cada decisión.
 - Estado final del Gantt y actualización de las tarjetas Trello después de la revisión grupal.
 - Revisión de nombres, fecha de entrega, formato exigido por la cátedra y conclusiones firmadas por los cuatro integrantes.
 

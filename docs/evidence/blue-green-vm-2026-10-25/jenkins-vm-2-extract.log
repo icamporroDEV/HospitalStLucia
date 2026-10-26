@@ -1,0 +1,15 @@
+Extracto del Console Output del build #2 aportado por Valentina.
+El usuario compartió el log completo en el chat; estas líneas documentan el resultado y el punto de rechazo.
+
+Checking out Revision 7f1accc587b76aacd2a0899c2fa028c9d1a73d7e
+PHPUnit 11.5.57
+...........F  12 / 12 (100%)
+PipelineScenarioTest::testCandidateIsRejectedBeforeDeploymentWhenRequested
+Falla controlada: rechazo en pruebas antes de desplegar
+FAILURES! Tests: 12, Assertions: 103, Failures: 1.
+Stage "Conectar al laboratorio" skipped due to earlier failure(s)
+Stage "Construir candidata" skipped due to earlier failure(s)
+Stage "Desplegar y validar candidata" skipped due to earlier failure(s)
+Stage "Cambiar tráfico y observar" skipped due to earlier failure(s)
+PIPELINE_DURATION_SECONDS=2
+Finished: FAILURE

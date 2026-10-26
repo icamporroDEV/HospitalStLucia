@@ -1,0 +1,231 @@
+Started by user [8m[0mValentina Chillemi
+Obtained Jenkinsfile from git https://github.com/valenchillemi/HospitalStLucia.git
+[8m[0m[Pipeline] Start of Pipeline
+[8m[0m[Pipeline] node
+Running on [8m[0mJenkins in /var/jenkins_home/workspace/my_pipeline
+[8m[0m[Pipeline] {
+[8m[0m[Pipeline] withEnv
+[8m[0m[Pipeline] {
+[8m[0m[Pipeline] timeout
+Timeout set to expire in 15 min
+[8m[0m[Pipeline] {
+[8m[0m[Pipeline] stage
+[8m[0m[Pipeline] { (Obtener código)
+[8m[0m[Pipeline] script
+[8m[0m[Pipeline] {
+[8m[0m[Pipeline] sh
++ date +%s
+[8m[0m[Pipeline] }
+[8m[0m[Pipeline] // script
+[8m[0m[Pipeline] checkout
+Selected Git installation does not exist. Using Default
+The recommended git tool is: NONE
+No credentials specified
+ > git rev-parse --resolve-git-dir /var/jenkins_home/workspace/my_pipeline/.git # timeout=10
+Fetching changes from the remote Git repository
+ > git config remote.origin.url https://github.com/valenchillemi/HospitalStLucia.git # timeout=10
+Fetching upstream changes from https://github.com/valenchillemi/HospitalStLucia.git
+ > git --version # timeout=10
+ > git --version # 'git version 2.47.3'
+ > git fetch --tags --force --progress -- https://github.com/valenchillemi/HospitalStLucia.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git rev-parse refs/remotes/origin/codex/jenkins-blue-green^{commit} # timeout=10
+Checking out Revision c819a5d810134364cf89d5f671bec530b0c1bcfc (refs/remotes/origin/codex/jenkins-blue-green)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f c819a5d810134364cf89d5f671bec530b0c1bcfc # timeout=10
+Commit message: "feat(observability): record availability evidence and pipeline timing"
+ > git rev-list --no-walk c819a5d810134364cf89d5f671bec530b0c1bcfc # timeout=10
+[8m[0m[Pipeline] }
+[8m[0m[Pipeline] // stage
+[8m[0m[Pipeline] stage
+[8m[0m[Pipeline] { (Pruebas PHP)
+[8m[0m[Pipeline] sh
++ composer install --no-interaction --prefer-dist
+Installing dependencies from lock file (including require-dev)
+Verifying lock file contents can be installed on current platform.
+Nothing to install, update or remove
+Generating autoload files
+25 packages you are using are looking for funding.
+Use the `composer fund` command to find out more!
+[8m[0m[Pipeline] withEnv
+[8m[0m[Pipeline] {
+[8m[0m[Pipeline] sh
++ composer test
+PHPUnit 11.5.57 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.27
+Configuration: /var/jenkins_home/workspace/my_pipeline/phpunit.xml
+
+............                                                      12 / 12 (100%)
+
+Time: 00:00.024, Memory: 8.00 MB
+
+OK (12 tests, 103 assertions)
+[8m[0m[Pipeline] }
+[8m[0m[Pipeline] // withEnv
+[8m[0m[Pipeline] }
+[8m[0m[Pipeline] // stage
+[8m[0m[Pipeline] stage
+[8m[0m[Pipeline] { (Conectar al laboratorio)
+[8m[0m[Pipeline] sh
++ set -eu
++ mkdir -p deploy/runtime
++ [ ! -f deploy/runtime/state.env ]
++ network=hospital_his-internal
++ docker network inspect hospital_his-internal
++ hostname
++ container_id=4fc1a2253920
++ docker inspect --format {{json .NetworkSettings.Networks}} 4fc1a2253920
++ grep -Fq hospital_his-internal
++ curl --fail --silent --show-error --connect-timeout 2 --max-time 5 http://nginx:8080/health/ready
+{"status":"ok"}
+[8m[0m[Pipeline] script
+[8m[0m[Pipeline] {
+[8m[0m[Pipeline] sh
++ ./deploy/bin/current-color
+[8m[0m[Pipeline] echo
+Activo: green; candidato: blue
+[8m[0m[Pipeline] }
+[8m[0m[Pipeline] // script
+[8m[0m[Pipeline] }
+[8m[0m[Pipeline] // stage
+[8m[0m[Pipeline] stage
+[8m[0m[Pipeline] { (Construir candidata)
+[8m[0m[Pipeline] script
+[8m[0m[Pipeline] {
+[8m[0m[Pipeline] sh
++ git rev-parse --short=12 HEAD
+[8m[0m[Pipeline] }
+[8m[0m[Pipeline] // script
+[8m[0m[Pipeline] sh
++ set -eu
++ git rev-parse --short=12 HEAD
++ date -u +%Y-%m-%dT%H:%M:%SZ
++ docker build --build-arg APP_VERSION=ci-11-c819a5d81013 --build-arg APP_COMMIT_SHA=c819a5d81013 --build-arg APP_BUILD_TIME=2026-10-26T00:36:03Z --tag hospital-st-lucia:ci-11-c819a5d81013 .
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+
+Sending build context to Docker daemon  140.3kB
+Step 1/13 : FROM php:8.3.35-apache-trixie
+ ---> c59c808172ee
+Step 2/13 : ARG APP_VERSION=dev
+ ---> Using cache
+ ---> 7bd715848f8a
+Step 3/13 : ARG APP_COMMIT_SHA=unknown
+ ---> Using cache
+ ---> 8a3743c55683
+Step 4/13 : ARG APP_BUILD_TIME=unknown
+ ---> Using cache
+ ---> 6ae0d7823193
+Step 5/13 : ENV APP_VERSION="$APP_VERSION"     APP_COMMIT_SHA="$APP_COMMIT_SHA"     APP_BUILD_TIME="$APP_BUILD_TIME"     DEPLOYMENT_COLOR=local
+ ---> Running in 1d425115371c
+ ---> Removed intermediate container 1d425115371c
+ ---> 0a17f595589a
+Step 6/13 : RUN sed -ri 's/^Listen 80$/Listen 8080/' /etc/apache2/ports.conf     && printf 'expose_php=Off\n' > /usr/local/etc/php/conf.d/security.ini     && mkdir -p /var/run/apache2 /var/lock/apache2 /var/log/apache2     && chown -R www-data:www-data /var/run/apache2 /var/lock/apache2 /var/log/apache2
+ ---> Running in 6b30716fa6c5
+ ---> Removed intermediate container 6b30716fa6c5
+ ---> 6452c704abaf
+Step 7/13 : COPY --chown=www-data:www-data apache/000-default.conf /etc/apache2/sites-available/000-default.conf
+ ---> 98a825dd2dc0
+Step 8/13 : COPY --chown=www-data:www-data public/ /var/www/html/public/
+ ---> d60ab1546797
+Step 9/13 : COPY --chown=www-data:www-data data/ /var/www/html/data/
+ ---> 2d73bc8b3faf
+Step 10/13 : USER www-data
+ ---> Running in c517ee3d75ab
+ ---> Removed intermediate container c517ee3d75ab
+ ---> d9580c33d67c
+Step 11/13 : EXPOSE 8080
+ ---> Running in 6c62a3835020
+ ---> Removed intermediate container 6c62a3835020
+ ---> 66540a0bc232
+Step 12/13 : HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=3     CMD ["php", "-r", "$body = @file_get_contents('http://127.0.0.1:8080/health/live'); exit($body === false ? 1 : 0);"]
+ ---> Running in 39ad7169ea2a
+ ---> Removed intermediate container 39ad7169ea2a
+ ---> a53019a01a2d
+Step 13/13 : CMD ["apache2-foreground"]
+ ---> Running in 590af4a95a3a
+ ---> Removed intermediate container 590af4a95a3a
+ ---> fe8874408f6d
+Successfully built fe8874408f6d
+Successfully tagged hospital-st-lucia:ci-11-c819a5d81013
+[8m[0m[Pipeline] }
+[8m[0m[Pipeline] // stage
+[8m[0m[Pipeline] stage
+[8m[0m[Pipeline] { (Desplegar y validar candidata)
+[8m[0m[Pipeline] script
+[8m[0m[Pipeline] {
+[8m[0m[Pipeline] }
+[8m[0m[Pipeline] // script
+[8m[0m[Pipeline] sh
++ ./deploy/bin/deploy-color blue hospital-st-lucia:ci-11-c819a5d81013 none 0
+ Container hospital-his-blue-1 Recreate
+ Container hospital-his-blue-1 Recreated
+ Container hospital-his-blue-1 Starting
+ Container hospital-his-blue-1 Started
+Smoke test OK: http://his-blue:8080 sirve la versión ci-11-c819a5d81013
+Deploy OK: hospital-st-lucia:ci-11-c819a5d81013 quedó validada en blue sin cambiar tráfico
+[8m[0m[Pipeline] sh
++ target_url=http://his-blue:8080
++ tests/Contract/container-smoke.sh http://his-blue:8080 ci-11-c819a5d81013
+Smoke test OK: http://his-blue:8080 sirve la versión ci-11-c819a5d81013
+[8m[0m[Pipeline] }
+[8m[0m[Pipeline] // stage
+[8m[0m[Pipeline] stage
+[8m[0m[Pipeline] { (Cambiar tráfico y observar)
+[8m[0m[Pipeline] script
+[8m[0m[Pipeline] {
+[8m[0m[Pipeline] sh
++ ./deploy/bin/switch-color blue
+Smoke test OK: http://his-blue:8080 sirve la versión ci-11-c819a5d81013
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+2026/10/26 00:36:57 [notice] 3671#3671: signal process started
+Switch OK: green -> blue
+[8m[0m[Pipeline] sh
++ ./deploy/bin/observe-public ci-11-c819a5d81013
+2026-10-26T00:37:00.382Z Observación 1/20: OK
+2026-10-26T00:37:01.450Z Observación 2/20: OK
+2026-10-26T00:37:02.509Z Observación 3/20: OK
+2026-10-26T00:37:03.567Z Observación 4/20: OK
+2026-10-26T00:37:04.637Z Observación 5/20: OK
+2026-10-26T00:37:05.698Z Observación 6/20: OK
+2026-10-26T00:37:06.766Z Observación 7/20: OK
+2026-10-26T00:37:07.827Z Observación 8/20: OK
+2026-10-26T00:37:08.936Z Observación 9/20: OK
+2026-10-26T00:37:09.998Z Observación 10/20: OK
+2026-10-26T00:37:11.057Z Observación 11/20: OK
+2026-10-26T00:37:12.118Z Observación 12/20: OK
+2026-10-26T00:37:13.176Z Observación 13/20: OK
+2026-10-26T00:37:14.234Z Observación 14/20: OK
+2026-10-26T00:37:15.293Z Observación 15/20: OK
+2026-10-26T00:37:16.360Z Observación 16/20: OK
+2026-10-26T00:37:17.422Z Observación 17/20: OK
+2026-10-26T00:37:18.494Z Observación 18/20: OK
+2026-10-26T00:37:19.554Z Observación 19/20: OK
+2026-10-26T00:37:20.612Z Observación 20/20: OK
+2026-10-26T00:37:20.615Z Observación OK: ci-11-c819a5d81013 permaneció disponible
+[8m[0m[Pipeline] }
+[8m[0m[Pipeline] // script
+[8m[0m[Pipeline] }
+[8m[0m[Pipeline] // stage
+[8m[0m[Pipeline] stage
+[8m[0m[Pipeline] { (Declarative: Post Actions)
+[8m[0m[Pipeline] script
+[8m[0m[Pipeline] {
+[8m[0m[Pipeline] sh
++ date +%s
++ echo PIPELINE_DURATION_SECONDS=86
+PIPELINE_DURATION_SECONDS=86
+[8m[0m[Pipeline] }
+[8m[0m[Pipeline] // script
+[8m[0m[Pipeline] }
+[8m[0m[Pipeline] // stage
+[8m[0m[Pipeline] }
+[8m[0m[Pipeline] // timeout
+[8m[0m[Pipeline] }
+[8m[0m[Pipeline] // withEnv
+[8m[0m[Pipeline] }
+[8m[0m[Pipeline] // node
+[8m[0m[Pipeline] End of Pipeline
+Finished: SUCCESS

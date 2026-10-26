@@ -38,6 +38,34 @@ deploy/bin/rollback-color blue
 
 Los scripts rechazan desplegar sobre el color activo. El estado de las imágenes vive en `deploy/runtime/state.env`, que no se versiona.
 
+## Escenarios de Jenkins
+
+El `Jenkinsfile` acepta el parámetro `DEMO_SCENARIO`:
+
+| Valor | Resultado esperado |
+| --- | --- |
+| `happy` | Pruebas, despliegue al color inactivo, smoke test, switch y observación exitosos. |
+| `pre-test` | La suite falla deliberadamente antes del build y del despliegue; el color público no cambia. |
+| `post-deploy` | El candidato pasa los smoke tests, recibe tráfico y luego falla en Turnos. Tras tres fallos consecutivos, Jenkins ejecuta el rollback al color anterior y el job termina con fallo esperado. |
+
+La falla `post-deploy` se configura solo en el slot candidato. Después del switch, `trigger-failure` crea una marca en el `tmpfs` de Apache; cinco segundos más tarde `/turnos` y `/api/turnos` responden HTTP 503. `/health/live`, `/health/ready` y `/version` siguen disponibles para mostrar la diferencia entre salud técnica y disponibilidad funcional. Al recrear el contenedor desaparece la marca. El modo normal (`none`) no introduce fallas.
+
+Ejemplo manual con Green inactivo:
+
+```bash
+deploy/bin/deploy-color green hospital-st-lucia:1.1.0 post-deploy 5
+deploy/bin/switch-color green
+deploy/bin/trigger-failure green
+if OBSERVATION_SECONDS=20 deploy/bin/observe-public 1.1.0; then
+    echo "ERROR: la falla esperada no apareció"
+else
+    echo "Falla funcional detectada"
+fi
+deploy/bin/rollback-color blue
+```
+
+En Jenkins el rollback se ejecuta automáticamente si falla la observación después del switch. Para repetir la PoC desde Jenkins, el controlador necesita acceso a Docker y a la red `hospital_his-internal`, y el proyecto Compose debe llamarse `hospital`.
+
 ## Prueba integral y limpieza
 
 ```bash

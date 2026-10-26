@@ -75,6 +75,16 @@ tests/Contract/blue-green-smoke.sh
 
 La explicación de cada operación y del despliegue de una imagen candidata está en [`deploy/README.md`](deploy/README.md).
 
+La toma de muestras externas, los CSV y el cálculo de métricas para las nueve corridas están en [`docs/monitoring.md`](docs/monitoring.md).
+
+Los resultados de las nueve corridas locales, con CSV y logs de Jenkins, están en [`docs/evidence/blue-green-local-2026-10-25/README.md`](docs/evidence/blue-green-local-2026-10-25/README.md).
+
+La reproducción del laboratorio en una VM EC2 está descrita en [`docs/vm-demo.md`](docs/vm-demo.md). El asistente interactivo `scripts/aws-ec2-wizard.sh` guía los pasos de la consola AWS desde Git Bash; solo guarda región, dirección de la VM y ruta local de la clave en `.env.vm` (ignorado por Git).
+
+El [informe final editable](docs/informe-final.docx) y su [versión Markdown](docs/informe-final.md) integran la arquitectura, el método, las métricas locales y de EC2, los límites y los pendientes de la entrega grupal. La [evidencia de EC2](docs/evidence/blue-green-vm-2026-10-25/README.md) conserva los cinco CSV, incluida la corrida `happy` #7 con 0/86 peticiones fallidas.
+
+El [índice del material de entrega](docs/entrega.md) reúne el informe, las evidencias, las guías y el [guion de demostración](docs/guion-demo.md).
+
 ## Rutas
 
 | Ruta | Uso |

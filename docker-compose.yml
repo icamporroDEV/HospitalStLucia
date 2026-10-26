@@ -3,6 +3,8 @@ services:
     image: ${BLUE_IMAGE:-hospital-st-lucia:local}
     environment:
       DEPLOYMENT_COLOR: blue
+      DEMO_FAILURE_MODE: ${BLUE_FAILURE_MODE:-none}
+      DEMO_FAILURE_AFTER_SECONDS: ${BLUE_FAILURE_AFTER_SECONDS:-0}
     ports:
       - "127.0.0.1:18081:8080"
     read_only: true
@@ -21,6 +23,8 @@ services:
     image: ${GREEN_IMAGE:-hospital-st-lucia:local}
     environment:
       DEPLOYMENT_COLOR: green
+      DEMO_FAILURE_MODE: ${GREEN_FAILURE_MODE:-none}
+      DEMO_FAILURE_AFTER_SECONDS: ${GREEN_FAILURE_AFTER_SECONDS:-0}
     ports:
       - "127.0.0.1:18082:8080"
     read_only: true

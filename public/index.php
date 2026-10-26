@@ -24,6 +24,18 @@ if ($path === '/version') {
     exit;
 }
 
+if (($path === '/' || $path === '/turnos' || $path === '/api/turnos')
+    && getenv('DEMO_FAILURE_MODE') === 'post-deploy') {
+    $trigger = '/var/run/apache2/demo-failure-trigger';
+    $delay = max(0, (int) (getenv('DEMO_FAILURE_AFTER_SECONDS') ?: 0));
+    if (is_file($trigger) && time() - filemtime($trigger) >= $delay) {
+        http_response_code(503);
+        header('Content-Type: text/plain; charset=utf-8');
+        echo 'Falla funcional controlada de Turnos';
+        exit;
+    }
+}
+
 if ($path === '/api/turnos') {
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode($turnos, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);

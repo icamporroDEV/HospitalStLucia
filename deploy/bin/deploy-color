@@ -5,10 +5,25 @@ set -eu
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 . "$SCRIPT_DIR/_common.sh"
 
-color=${1:?Uso: deploy-color <blue|green> <image>}
-image=${2:?Uso: deploy-color <blue|green> <image>}
+color=${1:?Uso: deploy-color <blue|green> <image> [none|post-deploy] [delay-segundos]}
+image=${2:?Uso: deploy-color <blue|green> <image> [none|post-deploy] [delay-segundos]}
+failure_mode=${3:-none}
+failure_delay=${4:-0}
 validate_color "$color"
 validate_image "$image"
+case "$failure_mode" in
+    none) failure_delay=0 ;;
+    post-deploy)
+        case "$failure_delay" in
+            ''|*[!0-9]*) echo "ERROR: demora de falla inválida" >&2; exit 1 ;;
+        esac
+        [ "$failure_delay" -gt 0 ] || {
+            echo "ERROR: la demora debe ser mayor que cero" >&2
+            exit 1
+        }
+        ;;
+    *) echo "ERROR: modo de falla inválido" >&2; exit 1 ;;
+esac
 ensure_state
 
 active=$(current_color)
@@ -19,13 +34,15 @@ active=$(current_color)
 
 service=$(service_for_color "$color")
 case "$color" in
-    blue) key=BLUE_IMAGE ;;
-    green) key=GREEN_IMAGE ;;
+    blue) key=BLUE_IMAGE; mode_key=BLUE_FAILURE_MODE; delay_key=BLUE_FAILURE_AFTER_SECONDS ;;
+    green) key=GREEN_IMAGE; mode_key=GREEN_FAILURE_MODE; delay_key=GREEN_FAILURE_AFTER_SECONDS ;;
 esac
 
 backup="$STATE_FILE.previous"
 cp "$STATE_FILE" "$backup"
 update_state "$key" "$image"
+update_state "$mode_key" "$failure_mode"
+update_state "$delay_key" "$failure_delay"
 
 restore_previous_slot()
 {

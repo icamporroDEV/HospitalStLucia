@@ -1,0 +1,16 @@
+#!/bin/sh
+
+set -eu
+
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+. "$SCRIPT_DIR/_common.sh"
+
+color=${1:?Uso: trigger-failure <blue|green>}
+service=$(service_for_color "$color")
+mode=$(compose exec -T "$service" printenv DEMO_FAILURE_MODE)
+[ "$mode" = post-deploy ] || {
+    echo "ERROR: ${color} no tiene la falla post-deploy configurada" >&2
+    exit 1
+}
+compose exec -T "$service" sh -c 'touch /var/run/apache2/demo-failure-trigger'
+echo "Falla funcional de ${color} activada"

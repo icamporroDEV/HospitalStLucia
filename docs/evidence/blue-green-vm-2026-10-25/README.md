@@ -10,10 +10,10 @@ Las corridas anteriores, medidas con el timeout inicial de 2 s por petición, re
 
 | Escenario | Jenkins | Muestras | Errores HTTP | Muestras fallidas | Duración del pipeline |
 | --- | --- | ---: | ---: | ---: | ---: |
-| [`pre-test`](VM-B1.csv) | #2, resultado pendiente de adjuntar | 15 | 0/30 (0 %) | 0/15 (0 %) | pendiente |
+| [`pre-test`](VM-B1.csv) | [#2](jenkins-vm-2-extract.log), `FAILURE` esperado en pruebas | 15 | 0/30 (0 %) | 0/15 (0 %) | 2 s |
 | [`post-deploy`](VM-C1.csv) | #3, `FAILURE` esperado con rollback | 32 | 4/64 (6,25 %) | 4/32 (12,5 %) | 29 s |
 | [`happy`](VM-A1.csv) | #5, `SUCCESS` | 37 | 1/74 (1,351 %) | 1/37 (2,703 %) | 39 s |
-| [`happy` repetido](VM-A2.csv) | #6, resultado pendiente de adjuntar | 42 | 1/84 (1,190 %) | 1/42 (2,381 %) | pendiente |
+| [`happy` repetido](VM-A2.csv) | [#6](jenkins-vm-6.log), `SUCCESS` | 42 | 1/84 (1,190 %) | 1/42 (2,381 %) | 39 s |
 | [`happy` con timeout de 5 s](VM-A3.csv) | #7, `SUCCESS` | 43 | **0/86 (0 %)** | **0/43 (0 %)** | 39 s |
 
 ## Detalle de la corrida `post-deploy`
@@ -28,10 +28,10 @@ Se ejecutó `happy` dos veces consecutivas: la primera dejó activo Blue `ci-4-7
 
 Hubo un timeout aislado de `/version` a las `01:59:48.509Z`, recuperado en la siguiente muestra a las `01:59:51.088Z`, **antes** del cambio de color. La causa no está identificada; por eso esta corrida no se presenta como 0 % de errores. La ventana completa tuvo 1/74 peticiones HTTP fallidas.
 
-Una repetición con el mismo timeout de 2 s por petición quedó registrada en [`VM-A2.csv`](VM-A2.csv). Observó el paso de Green `ci-5-7f1accc587b7` a Blue `ci-6-7f1accc587b7`. Hubo un timeout aislado de `/api/turnos` a las `02:05:32.391Z`, antes del cambio; luego ambas rutas respondieron 200 en todas las muestras del cambio y posteriores. La ventana completa tuvo 1/84 peticiones HTTP fallidas. La repetición ayuda a localizar los timeouts en el monitoreo externo previo al cambio, aunque no identifica su causa.
+Una repetición con el mismo timeout de 2 s por petición quedó registrada en [`VM-A2.csv`](VM-A2.csv). Observó el paso de Green `ci-5-7f1accc587b7` a Blue `ci-6-7f1accc587b7`. Jenkins #6 terminó en `SUCCESS` en 39 s; su [Console Output](jenkins-vm-6.log) muestra smoke test, `Switch OK: green -> blue` y 20 observaciones públicas correctas. Hubo un timeout aislado de `/api/turnos` a las `02:05:32.391Z`, antes del cambio; luego ambas rutas respondieron 200 en todas las muestras del cambio y posteriores. La ventana completa tuvo 1/84 peticiones HTTP fallidas. La repetición ayuda a localizar los timeouts en el monitoreo externo previo al cambio, aunque no identifica su causa.
 
 La tercera corrida [`VM-A3.csv`](VM-A3.csv), con `--timeout 5`, observó el paso de Blue `ci-6-7f1accc587b7` a Green `ci-7-7f1accc587b7` entre la última muestra Blue y la primera Green a las `02:08:55.259Z`. Las 43 muestras fueron correctas: 86/86 respuestas HTTP exitosas y 0 errores funcionales. Jenkins #7 informó `PIPELINE_DURATION_SECONDS=39` y `Finished: SUCCESS`. El aumento del timeout cambió la sensibilidad del monitor a las respuestas lentas; se declara para que la medida sea reproducible.
 
-En `pre-test`, las 15 muestras externas mantuvieron Green `ci-1-7f1accc587b7` con las dos rutas en 200. Falta adjuntar el Console Output del build #2 para confirmar su resultado y duración en esta tabla.
+En `pre-test`, las 15 muestras externas mantuvieron Green `ci-1-7f1accc587b7` con las dos rutas en 200. El [extracto del build #2](jenkins-vm-2-extract.log) documenta el fallo PHPUnit controlado, la omisión de las etapas de conexión, construcción, despliegue y cambio de tráfico, `PIPELINE_DURATION_SECONDS=2` y `Finished: FAILURE`. Se trata del resultado esperado de B.
 
 El intervalo solicitado al monitor fue 0,25 s. Por la latencia de las consultas a través del túnel SSH, la separación real entre muestras fue aproximadamente 1,3 s. Estas medidas describen la ventana observada en la demo; no equivalen a disponibilidad de producción.

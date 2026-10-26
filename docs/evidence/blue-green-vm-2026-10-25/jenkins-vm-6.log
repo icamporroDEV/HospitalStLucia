@@ -1,0 +1,237 @@
+Started by user Clínica Santa Lucía
+
+Obtained Jenkinsfile from git https://github.com/valenchillemi/HospitalStLucia.git
+[Pipeline] Start of Pipeline
+[Pipeline] node
+Running on Jenkins
+ in /var/jenkins_home/workspace/hospital-vm
+[Pipeline] {
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] timeout
+Timeout set to expire in 15 min
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Obtener código)
+[Pipeline] script
+[Pipeline] {
+[Pipeline] sh
++ date +%s
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] checkout
+Selected Git installation does not exist. Using Default
+The recommended git tool is: NONE
+No credentials specified
+ > git rev-parse --resolve-git-dir /var/jenkins_home/workspace/hospital-vm/.git # timeout=10
+Fetching changes from the remote Git repository
+ > git config remote.origin.url https://github.com/valenchillemi/HospitalStLucia.git # timeout=10
+Fetching upstream changes from https://github.com/valenchillemi/HospitalStLucia.git
+ > git --version # timeout=10
+ > git --version # 'git version 2.47.3'
+ > git fetch --tags --force --progress -- https://github.com/valenchillemi/HospitalStLucia.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git rev-parse refs/remotes/origin/codex/jenkins-blue-green^{commit} # timeout=10
+Checking out Revision 7f1accc587b76aacd2a0899c2fa028c9d1a73d7e (refs/remotes/origin/codex/jenkins-blue-green)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 7f1accc587b76aacd2a0899c2fa028c9d1a73d7e # timeout=10
+Commit message: "fix(vm): make Jenkins home writable with rootless Docker"
+ > git rev-list --no-walk 7f1accc587b76aacd2a0899c2fa028c9d1a73d7e # timeout=10
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Pruebas PHP)
+[Pipeline] sh
++ composer install --no-interaction --prefer-dist
+Installing dependencies from lock file (including require-dev)
+Verifying lock file contents can be installed on current platform.
+Nothing to install, update or remove
+Generating autoload files
+25 packages you are using are looking for funding.
+Use the `composer fund` command to find out more!
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] sh
++ composer test
+PHPUnit 11.5.57 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.27
+Configuration: /var/jenkins_home/workspace/hospital-vm/phpunit.xml
+
+............                                                      12 / 12 (100%)
+
+Time: 00:00.004, Memory: 8.00 MB
+
+OK (12 tests, 103 assertions)
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Conectar al laboratorio)
+[Pipeline] sh
++ set -eu
++ state_file=/hospital-state/state.env
++ dirname /hospital-state/state.env
++ mkdir -p /hospital-state
++ [ ! -f /hospital-state/state.env ]
++ network=hospital_his-internal
++ docker network inspect hospital_his-internal
++ hostname
++ container_id=754820ccd56b
++ docker inspect --format {{json .NetworkSettings.Networks}} 754820ccd56b
++ grep -Fq hospital_his-internal
++ curl --fail --silent --show-error --connect-timeout 2 --max-time 5 http://nginx:8080/health/ready
+{"status":"ok"}
+[Pipeline] script
+[Pipeline] {
+[Pipeline] sh
++ ./deploy/bin/current-color
+[Pipeline] echo
+Activo: green; candidato: blue
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Construir candidata)
+[Pipeline] script
+[Pipeline] {
+[Pipeline] sh
++ git rev-parse --short=12 HEAD
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] sh
++ set -eu
++ git rev-parse --short=12 HEAD
++ date -u +%Y-%m-%dT%H:%M:%SZ
++ docker build --build-arg APP_VERSION=ci-6-7f1accc587b7 --build-arg APP_COMMIT_SHA=7f1accc587b7 --build-arg APP_BUILD_TIME=2026-10-26T02:05:40Z --tag hospital-st-lucia:ci-6-7f1accc587b7 .
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+
+Sending build context to Docker daemon  153.6kB
+
+Step 1/13 : FROM php:8.3.35-apache-trixie
+ ---> c59c808172ee
+Step 2/13 : ARG APP_VERSION=dev
+ ---> Using cache
+ ---> ec0e95fe59af
+Step 3/13 : ARG APP_COMMIT_SHA=unknown
+ ---> Using cache
+ ---> fd57e79b5cd3
+Step 4/13 : ARG APP_BUILD_TIME=unknown
+ ---> Using cache
+ ---> b7b3203b964e
+Step 5/13 : ENV APP_VERSION="$APP_VERSION"     APP_COMMIT_SHA="$APP_COMMIT_SHA"     APP_BUILD_TIME="$APP_BUILD_TIME"     DEPLOYMENT_COLOR=local
+ ---> Running in 2cd4e5de72b7
+ ---> Removed intermediate container 2cd4e5de72b7
+ ---> 2d66f254298c
+Step 6/13 : RUN sed -ri 's/^Listen 80$/Listen 8080/' /etc/apache2/ports.conf     && printf 'expose_php=Off\n' > /usr/local/etc/php/conf.d/security.ini     && mkdir -p /var/run/apache2 /var/lock/apache2 /var/log/apache2     && chown -R www-data:www-data /var/run/apache2 /var/lock/apache2 /var/log/apache2
+ ---> Running in 4bb57bfb466f
+ ---> Removed intermediate container 4bb57bfb466f
+ ---> 7f41a2705c44
+Step 7/13 : COPY --chown=www-data:www-data apache/000-default.conf /etc/apache2/sites-available/000-default.conf
+ ---> 9bb3f121d7d0
+Step 8/13 : COPY --chown=www-data:www-data public/ /var/www/html/public/
+ ---> 9af29e4ff1b8
+Step 9/13 : COPY --chown=www-data:www-data data/ /var/www/html/data/
+ ---> 7650e21364b0
+Step 10/13 : USER www-data
+ ---> Running in 48670b723b64
+ ---> Removed intermediate container 48670b723b64
+ ---> 01b847d9165a
+Step 11/13 : EXPOSE 8080
+ ---> Running in 84fa4d2e1090
+ ---> Removed intermediate container 84fa4d2e1090
+ ---> e68095d57b32
+Step 12/13 : HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=3     CMD ["php", "-r", "$body = @file_get_contents('http://127.0.0.1:8080/health/live'); exit($body === false ? 1 : 0);"]
+ ---> Running in a10a95f57095
+ ---> Removed intermediate container a10a95f57095
+ ---> bde41eefb7eb
+Step 13/13 : CMD ["apache2-foreground"]
+ ---> Running in e938b485a380
+ ---> Removed intermediate container e938b485a380
+ ---> a19f1fe0e1b6
+Successfully built a19f1fe0e1b6
+Successfully tagged hospital-st-lucia:ci-6-7f1accc587b7
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Desplegar y validar candidata)
+[Pipeline] script
+[Pipeline] {
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] sh
++ ./deploy/bin/deploy-color blue hospital-st-lucia:ci-6-7f1accc587b7 none 0
+time="2026-10-26T02:05:46Z" level=warning msg="Found orphan containers (hospital-jenkins-1) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
+ Container hospital-his-blue-1 Recreate
+ Container hospital-his-blue-1 Recreated
+ Container hospital-his-blue-1 Starting
+ Container hospital-his-blue-1 Started
+Smoke test OK: http://his-blue:8080 sirve la versión ci-6-7f1accc587b7
+Deploy OK: hospital-st-lucia:ci-6-7f1accc587b7 quedó validada en blue sin cambiar tráfico
+[Pipeline] sh
++ target_url=http://his-blue:8080
++ tests/Contract/container-smoke.sh http://his-blue:8080 ci-6-7f1accc587b7
+Smoke test OK: http://his-blue:8080 sirve la versión ci-6-7f1accc587b7
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Cambiar tráfico y observar)
+[Pipeline] script
+[Pipeline] {
+[Pipeline] sh
++ ./deploy/bin/switch-color blue
+Smoke test OK: http://his-blue:8080 sirve la versión ci-6-7f1accc587b7
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+2026/10/26 02:05:55 [notice] 1192#1192: signal process started
+Switch OK: green -> blue
+[Pipeline] sh
++ ./deploy/bin/observe-public ci-6-7f1accc587b7
+2026-10-26T02:05:56.732Z Observación 1/20: OK
+2026-10-26T02:05:57.750Z Observación 2/20: OK
+2026-10-26T02:05:58.767Z Observación 3/20: OK
+2026-10-26T02:05:59.785Z Observación 4/20: OK
+2026-10-26T02:06:00.808Z Observación 5/20: OK
+2026-10-26T02:06:01.826Z Observación 6/20: OK
+2026-10-26T02:06:02.843Z Observación 7/20: OK
+2026-10-26T02:06:03.867Z Observación 8/20: OK
+2026-10-26T02:06:04.889Z Observación 9/20: OK
+2026-10-26T02:06:05.906Z Observación 10/20: OK
+2026-10-26T02:06:06.924Z Observación 11/20: OK
+2026-10-26T02:06:07.941Z Observación 12/20: OK
+2026-10-26T02:06:08.959Z Observación 13/20: OK
+2026-10-26T02:06:09.976Z Observación 14/20: OK
+2026-10-26T02:06:10.994Z Observación 15/20: OK
+2026-10-26T02:06:12.012Z Observación 16/20: OK
+2026-10-26T02:06:13.040Z Observación 17/20: OK
+2026-10-26T02:06:14.057Z Observación 18/20: OK
+2026-10-26T02:06:15.074Z Observación 19/20: OK
+2026-10-26T02:06:16.092Z Observación 20/20: OK
+2026-10-26T02:06:16.092Z Observación OK: ci-6-7f1accc587b7 permaneció disponible
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Declarative: Post Actions)
+[Pipeline] script
+[Pipeline] {
+[Pipeline] sh
++ date +%s
++ echo PIPELINE_DURATION_SECONDS=39
+PIPELINE_DURATION_SECONDS=39
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] // timeout
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] End of Pipeline
+Finished: SUCCESS

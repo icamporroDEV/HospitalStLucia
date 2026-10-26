@@ -16,7 +16,7 @@ La prueba de concepto (PoC) implementó un despliegue Blue Green automatizado pa
 
 Se probaron tres escenarios: despliegue exitoso, rechazo antes de desplegar y fallo funcional posterior al cambio con rollback. En el laboratorio local se realizaron tres repeticiones de cada uno. Los tres despliegues exitosos registraron **0 errores en 2524 peticiones HTTP** externas. En las tres pruebas de rollback, la recuperación observada media fue **3,583 s** y la peor **3,75 s**, por debajo de la meta de 30 s. La topología se reprodujo en una VM EC2: el build exitoso #7 registró **0 errores en 86 peticiones** con un timeout de 5 s por petición, y el fallo inducido del build #3 se recuperó en **3,907 s** desde la primera muestra fallida. Estas cifras describen ventanas de ensayo, no un SLA de producción.
 
-El alcance excluye historias clínicas reales, datos sensibles, bases de datos y alta disponibilidad de infraestructura. Falta incorporar al documento de entrega el gasto real de AWS y la confirmación del estado del tablero Trello. El PR del pipeline está abierto para integración al repositorio principal.
+El alcance excluye historias clínicas reales, datos sensibles, bases de datos y alta disponibilidad de infraestructura. Falta incorporar al documento de entrega el gasto real de AWS. El estado visible del tablero Trello se registró mediante captura: cuatro tarjetas Por hacer, ninguna En curso, una A validar y trece Completado. El PR del pipeline está abierto para integración al repositorio principal.
 
 ## 1. Problema, objetivo y alcance
 
@@ -76,13 +76,13 @@ La topología se reprodujo en una instancia Ubuntu 24.04 x86_64 de la región `u
 
 | Build y escenario | Resultado confirmado | Medición externa |
 | --- | --- | --- |
-| #2, `pre-test` | Falta adjuntar Console Output para confirmar duración y estado final. | 15/15 muestras correctas; 0/30 peticiones fallidas; Green permaneció visible. |
+| #2, `pre-test` | `FAILURE` esperado en pruebas, 2 s; etapas posteriores omitidas. | 15/15 muestras correctas; 0/30 peticiones fallidas; Green permaneció visible. |
 | #3, `post-deploy` | `FAILURE` esperado, rollback Blue → Green, 29 s. | La caída inducida se detectó en 3,285 s y se recuperó en 3,907 s; el CSV completo tiene 4/64 peticiones fallidas, incluyendo un timeout previo separado. |
 | #5, `happy` | `SUCCESS`, 39 s, Blue → Green. | 1/74 peticiones fallidas por un timeout previo al switch. |
-| #6, `happy` | La versión pública pasó de Green `ci-5` a Blue `ci-6`; falta adjuntar Console Output. | 1/84 peticiones fallidas por un timeout previo al switch. |
+| #6, `happy` | `SUCCESS`, 39 s; la versión pública pasó de Green `ci-5` a Blue `ci-6`. | 1/84 peticiones fallidas por un timeout previo al switch. |
 | #7, `happy` | `SUCCESS`, 39 s, Blue → Green. | **0/86 peticiones fallidas y 0/43 muestras fallidas**, con timeout de 5 s. |
 
-En el build #3, el tercer fallo de Jenkins quedó registrado a las `01:54:46.630Z`. Blue `ci-3` respondió 503 en Turnos y Green `ci-1` reapareció en la primera muestra correcta a las `01:54:47.241Z`. El CSV contiene además un timeout aislado de `/version` anterior a servir la candidata. En #5 y #6 también hubo un timeout aislado previo al cambio. Su causa no está identificada y se conservaron en la evidencia; el **0 %** corresponde específicamente al build #7.
+En el build #3, el tercer fallo de Jenkins quedó registrado a las `01:54:46.630Z`. Blue `ci-3` respondió 503 en Turnos y Green `ci-1` reapareció en la primera muestra correcta a las `01:54:47.241Z`. El CSV contiene además un timeout aislado de `/version` anterior a servir la candidata. En #5 y #6 también hubo un timeout aislado previo al cambio. Su causa no está identificada y se conservaron en la evidencia; el **0 %** corresponde específicamente al build #7. El Console Output completo de #6 y un extracto del de #2 acompañan los CSV de la VM.
 
 ## 7. Evaluación frente a los objetivos
 
@@ -90,11 +90,11 @@ En el build #3, el tercer fallo de Jenkins quedó registrado a las `01:54:46.630
 | --- | --- |
 | Pipeline de build, pruebas, despliegue inactivo, validación, switch y observación | Implementado en `Jenkinsfile` y ejecutado localmente y en EC2. |
 | Identificar Active, Release Candidate y LKG | Versión y commit visibles; color activo y objetivo en logs; rollback recibe el color estable previo. |
-| Demostrar los escenarios A, B y C | Tres repeticiones por escenario en local; en VM hay CSV de los tres escenarios, con logs de #2 pendientes de adjuntar. |
+| Demostrar los escenarios A, B y C | Tres repeticiones por escenario en local; en VM hay CSV de los tres escenarios, con resultado y duración confirmados para #2, #3, #5, #6 y #7. |
 | Medir HTTP, MTTD, recuperación, duración y versión | CSV externos, resúmenes, logs Jenkins y `/version` conservados. |
 | Error 0 % en despliegue exitoso | Cumplido en las tres A locales y en la A de VM #7 bajo el timeout documentado. |
 | Recuperación en menos de 30 s | Cumplido en las tres C locales y en la C de VM observada; no extrapolable a producción. |
-| Gestión ágil con EDT, Gantt y Trello | La segunda entrega define EDT, responsables y enlaces. Falta verificar con el grupo el estado final del tablero y del cronograma. |
+| Gestión ágil con EDT, Gantt y Trello | La segunda entrega define EDT y responsables. La captura del tablero muestra 4 Por hacer, 0 En curso, 1 A validar y 13 Completado. Falta confirmar el cronograma definitivo y actualizar las tarjetas según la revisión grupal. |
 
 ## 8. Riesgos, límites y costos
 
@@ -108,7 +108,7 @@ En el build #3, el tercer fallo de Jenkins quedó registrado a las `01:54:46.630
 
 ## 9. Gestión del trabajo y trazabilidad
 
-La segunda entrega asigna gestión y documentación a Valentina, arquitectura e infraestructura a Germán, desarrollo y CI/CD a Ignacio, y QA y observabilidad a Joaquín. Define EDT 1.1–6.2, cronograma de dependencias y un tablero Kanban en Trello con las listas Por hacer, En curso, A validar y Completado. El repositorio identifica el tablero del Grupo 03 en `docs/agents/issue-tracker.md`. El estado actual de tarjetas, fechas reales y responsables finales no se pudo verificar desde el repositorio: debe completarse con una captura o exportación del tablero antes de entregar. Lo mismo aplica a la versión definitiva del Gantt.
+Según la segunda entrega, Valentina gestiona y documenta, Germán diseña la arquitectura e infraestructura, Ignacio desarrolla CI/CD y Joaquín cubre QA y observabilidad. La captura en `docs/evidence/kanban-2026-10-25.png` muestra **4 Por hacer** (3.1, 6.1, 6.2 y 6.3), **0 En curso**, **1 A validar** (1.2) y **13 Completado**. La imagen acredita el estado visible, pero no el detalle de cada tarjeta ni el Gantt. El grupo debe confirmar el cronograma definitivo y actualizar las tarjetas tras revisar esta entrega.
 
 El código y la evidencia de esta PoC están propuestos en el PR #4 de `icamporroDEV/HospitalStLucia`, rama `codex/jenkins-blue-green` del fork `valenchillemi/HospitalStLucia`. Al preparar este informe, el PR estaba abierto y sin descripción ni revisiones registradas; su integración a `main` depende del propietario del repositorio.
 
@@ -116,7 +116,7 @@ El código y la evidencia de esta PoC están propuestos en el PR #4 de `icamporr
 
 La PoC mostró que un cambio de versión puede validarse en el color inactivo y promoverse con 0 errores HTTP observados en las corridas exitosas seleccionadas. También mostró que una candidata técnicamente viva puede fallar en una función visible para usuarios: el escenario C produjo HTTP 503 en Turnos, Jenkins detectó la secuencia y restauró el color estable dentro de la meta medida. La versión de producción quedó identificable por commit y número de build.
 
-Para cerrar la entrega grupal faltan: incorporar el estado real de Trello y Gantt; completar el costo observado en AWS; adjuntar los Console Output de VM #2 y #6 si se desea cerrar esas filas; revisar el texto con los cuatro integrantes; y completar la descripción, revisión e integración del PR. Estos pendientes son documentales y de coordinación; no invalidan los resultados técnicos ya medidos.
+Para cerrar la entrega grupal faltan: completar el costo observado en AWS; confirmar el Gantt y actualizar las tarjetas de Trello según la revisión grupal; revisar el texto con los cuatro integrantes; y completar la descripción, revisión e integración del PR. Estos pendientes son documentales y de coordinación; no invalidan los resultados técnicos ya medidos.
 
 ## Anexo A Fuentes internas reproducibles
 
@@ -124,5 +124,5 @@ Para cerrar la entrega grupal faltan: incorporar el estado real de Trello y Gant
 - Pipeline: `Jenkinsfile`; operaciones de despliegue: `deploy/bin/`; topología: `docker-compose.yml` y `docker-compose.vm.yml`.
 - Protocolo de medición: `docs/monitoring.md` y `scripts/availability_monitor.py`.
 - Laboratorio local: `docs/evidence/blue-green-local-2026-10-25/README.md`, CSV y nueve logs Jenkins.
-- VM: `docs/vm-demo.md` y `docs/evidence/blue-green-vm-2026-10-25/README.md`, con cinco CSV.
-- Seguimiento: `docs/agents/issue-tracker.md` y tablero Trello del Grupo 03.
+- VM: `docs/vm-demo.md` y `docs/evidence/blue-green-vm-2026-10-25/README.md`, con cinco CSV y logs de #2 y #6.
+- Seguimiento: `docs/agents/issue-tracker.md`, captura `docs/evidence/kanban-2026-10-25.png` y tablero Trello del Grupo 03.

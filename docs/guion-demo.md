@@ -15,7 +15,7 @@ Este guion reúne las acciones mínimas para presentar la PoC en la VM. La prepa
 
 **Escenario A.** Ejecutar `happy` si se dispone del tiempo de demo. Mostrar que Jenkins prueba, construye, valida la candidata, conmuta el tráfico y termina `SUCCESS`. Comparar el color y la versión de `/version` antes y después. En el ensayo documentado #7, el monitor externo tomó 43 muestras y registró 86/86 peticiones HTTP exitosas.
 
-**Escenario B.** Mostrar el Console Output local de rechazo previo o ejecutar `pre-test`. La falla de PHPUnit es deliberada: el pipeline termina `FAILURE` antes del build y del despliegue; el color público debe mantenerse. Las tres repeticiones locales tuvieron 0/494 errores HTTP durante sus ventanas de medición.
+**Escenario B.** Mostrar el [extracto del build VM #2](evidence/blue-green-vm-2026-10-25/jenkins-vm-2-extract.log) o ejecutar `pre-test`. La falla de PHPUnit es deliberada: el pipeline termina `FAILURE` antes del build y del despliegue; el color público debe mantenerse. En VM duró 2 s y el monitor registró 0/30 errores HTTP. Las tres repeticiones locales tuvieron 0/494 errores HTTP durante sus ventanas de medición.
 
 **Escenario C.** Mostrar el Console Output y CSV del build VM #3. Explicar que la candidata pasa el smoke test, recibe tráfico, pero Turnos empieza a responder 503. Jenkins registra tres fallos consecutivos y ejecuta `Rollback OK: blue -> green`. La primera muestra correcta después del fallo inducido llegó 3,907 s tras la primera muestra fallida; el límite definido era 30 s. El `FAILURE` final indica rechazo de esa release, no pérdida permanente del servicio.
 

@@ -12,6 +12,8 @@ python .\scripts\availability_monitor.py record --url http://127.0.0.1:8080 --in
 
 Ejecutar el escenario elegido en Jenkins. Cuando el job haya terminado y la URL pública vuelva a responder correctamente, detener el monitor con Ctrl+C. El CSV queda en `deploy/runtime/evidence/`, directorio excluido de Git. Usar un nombre nuevo en cada corrida: `A1.csv` a `A3.csv` para `happy`, `B1.csv` a `B3.csv` para `pre-test`, y `C1.csv` a `C3.csv` para `post-deploy`.
 
+El límite por petición HTTP es 2 s por defecto. Si se mide una VM a través de un túnel SSH con latencia cercana a ese límite, usar `--timeout 5` y registrar ese valor junto al CSV. Un timeout más largo reduce los falsos fallos por latencia, pero también tarda más en detectar una petición que realmente no responde; no comparar directamente tiempos de detección tomados con límites distintos.
+
 Para resumir una corrida:
 
 ```powershell
@@ -30,7 +32,7 @@ La fecha y la duración de ese ejemplo se reemplazan por los valores de la corri
 
 - `http_success_rate_percent` y `http_error_rate_percent`: proporción de respuestas HTTP exitosas y fallidas, contando por separado las dos peticiones de cada muestra.
 - `success_rate_percent` y `error_rate_percent`: proporción de muestras donde `/api/turnos` responde con datos ficticios válidos y `/version` identifica la release.
-- `mttd_s`: tiempo desde el primer fallo observado por el monitor hasta que Jenkins detecta tres fallos consecutivos. Se calcula solo para C con `--detected-at`.
+- `mttd_s`: tiempo desde el primer fallo de la caída que contiene `--detected-at` hasta que Jenkins detecta tres fallos consecutivos. Si hay más de una caída en el CSV, se elige la correspondiente al timestamp de Jenkins; `detected_outage_index` indica su posición. Se calcula solo para C.
 - `observed_recovery_s`: tiempo desde el primer fallo observado hasta la primera muestra correcta tras el rollback. Es la medida observada del RTO. La resolución aproximada depende del intervalo de muestreo y la latencia HTTP.
 - `mean_observed_recovery_s`: media de los períodos de recuperación dentro del CSV; para una única caída equivale a `observed_recovery_s`.
 - `pipeline_duration_s`: duración reportada por Jenkins para la corrida.

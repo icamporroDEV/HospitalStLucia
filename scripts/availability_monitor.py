@@ -25,9 +25,9 @@ FIELDS = (
 )
 
 
-def fetch(url):
+def fetch(url, timeout):
     try:
-        with urlopen(url, timeout=2) as response:
+        with urlopen(url, timeout=timeout) as response:
             return response.status, response.read(), ""
     except HTTPError as exc:
         return exc.code, b"", f"HTTP {exc.code}"
@@ -35,11 +35,11 @@ def fetch(url):
         return 0, b"", str(exc.reason if isinstance(exc, URLError) else exc)
 
 
-def sample(base_url, started):
+def sample(base_url, started, timeout):
     taken = time.monotonic()
     timestamp = datetime.now(timezone.utc).isoformat(timespec="milliseconds")
-    turnos_status, turnos_body, turnos_error = fetch(f"{base_url}/api/turnos")
-    version_status, version_body, version_error = fetch(f"{base_url}/version")
+    turnos_status, turnos_body, turnos_error = fetch(f"{base_url}/api/turnos", timeout)
+    version_status, version_body, version_error = fetch(f"{base_url}/version", timeout)
     version = ""
     color = ""
     functional = False
@@ -134,11 +134,22 @@ def summarize(rows, detected_at=None, pipeline_duration_s=None):
         detected = datetime.fromisoformat(detected_at.replace("Z", "+00:00"))
         if detected.tzinfo is None:
             raise ValueError("--detected-at debe incluir zona horaria UTC")
-        first_failure_at = datetime.fromisoformat(outages[0]["first_failure_utc"])
+        matching_outages = [
+            (index, outage)
+            for index, outage in enumerate(outages, start=1)
+            if datetime.fromisoformat(outage["first_failure_utc"]) <= detected
+            and (
+                outage["recovered_utc"] is None
+                or detected <= datetime.fromisoformat(outage["recovered_utc"])
+            )
+        ]
+        if len(matching_outages) != 1:
+            raise ValueError("La detección no coincide con una caída del CSV; revise el timestamp")
+        outage_index, detected_outage = matching_outages[0]
+        first_failure_at = datetime.fromisoformat(detected_outage["first_failure_utc"])
         detection_delay = (detected - first_failure_at).total_seconds()
-        if detection_delay < 0:
-            raise ValueError("La detección antecede al primer fallo observado; revise los relojes")
         result["mttd_s"] = round(detection_delay, 3)
+        result["detected_outage_index"] = outage_index
     if pipeline_duration_s is not None:
         result["pipeline_duration_s"] = pipeline_duration_s
     return result
@@ -155,7 +166,7 @@ def record(args):
         writer.writeheader()
         try:
             while deadline is None or time.monotonic() < deadline:
-                writer.writerow(sample(args.url.rstrip("/"), started))
+                writer.writerow(sample(args.url.rstrip("/"), started, args.timeout))
                 stream.flush()
                 tick += args.interval
                 time.sleep(max(0, tick - time.monotonic()))
@@ -178,6 +189,7 @@ def main():
     recording = commands.add_parser("record", help="record samples until Ctrl+C or duration")
     recording.add_argument("--url", default="http://127.0.0.1:8080")
     recording.add_argument("--interval", type=float, default=0.25)
+    recording.add_argument("--timeout", type=float, default=2, help="seconds per HTTP request; default 2")
     recording.add_argument("--duration", type=float, default=0, help="seconds; 0 means until Ctrl+C")
     recording.add_argument("--output", required=True)
     recording.set_defaults(func=record)
@@ -187,8 +199,8 @@ def main():
     analysis.add_argument("--pipeline-duration-s", type=float, help="PIPELINE_DURATION_SECONDS from Jenkins")
     analysis.set_defaults(func=summary)
     args = parser.parse_args()
-    if args.command == "record" and (args.interval <= 0 or args.duration < 0):
-        parser.error("interval must be positive and duration cannot be negative")
+    if args.command == "record" and (args.interval <= 0 or args.timeout <= 0 or args.duration < 0):
+        parser.error("interval and timeout must be positive and duration cannot be negative")
     args.func(args)
 
 

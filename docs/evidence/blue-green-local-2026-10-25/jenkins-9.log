@@ -1,0 +1,120 @@
+Started by user [8m[0mValentina Chillemi
+Obtained Jenkinsfile from git https://github.com/valenchillemi/HospitalStLucia.git
+[8m[0m[Pipeline] Start of Pipeline
+[8m[0m[Pipeline] node
+Running on [8m[0mJenkins in /var/jenkins_home/workspace/my_pipeline
+[8m[0m[Pipeline] {
+[8m[0m[Pipeline] withEnv
+[8m[0m[Pipeline] {
+[8m[0m[Pipeline] timeout
+Timeout set to expire in 15 min
+[8m[0m[Pipeline] {
+[8m[0m[Pipeline] stage
+[8m[0m[Pipeline] { (Obtener código)
+[8m[0m[Pipeline] script
+[8m[0m[Pipeline] {
+[8m[0m[Pipeline] sh
++ date +%s
+[8m[0m[Pipeline] }
+[8m[0m[Pipeline] // script
+[8m[0m[Pipeline] checkout
+Selected Git installation does not exist. Using Default
+The recommended git tool is: NONE
+No credentials specified
+ > git rev-parse --resolve-git-dir /var/jenkins_home/workspace/my_pipeline/.git # timeout=10
+Fetching changes from the remote Git repository
+ > git config remote.origin.url https://github.com/valenchillemi/HospitalStLucia.git # timeout=10
+Fetching upstream changes from https://github.com/valenchillemi/HospitalStLucia.git
+ > git --version # timeout=10
+ > git --version # 'git version 2.47.3'
+ > git fetch --tags --force --progress -- https://github.com/valenchillemi/HospitalStLucia.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git rev-parse refs/remotes/origin/codex/jenkins-blue-green^{commit} # timeout=10
+Checking out Revision c819a5d810134364cf89d5f671bec530b0c1bcfc (refs/remotes/origin/codex/jenkins-blue-green)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f c819a5d810134364cf89d5f671bec530b0c1bcfc # timeout=10
+Commit message: "feat(observability): record availability evidence and pipeline timing"
+ > git rev-list --no-walk c819a5d810134364cf89d5f671bec530b0c1bcfc # timeout=10
+[8m[0m[Pipeline] }
+[8m[0m[Pipeline] // stage
+[8m[0m[Pipeline] stage
+[8m[0m[Pipeline] { (Pruebas PHP)
+[8m[0m[Pipeline] sh
++ composer install --no-interaction --prefer-dist
+Installing dependencies from lock file (including require-dev)
+Verifying lock file contents can be installed on current platform.
+Nothing to install, update or remove
+Generating autoload files
+25 packages you are using are looking for funding.
+Use the `composer fund` command to find out more!
+[8m[0m[Pipeline] withEnv
+[8m[0m[Pipeline] {
+[8m[0m[Pipeline] sh
++ composer test
+PHPUnit 11.5.57 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.27
+Configuration: /var/jenkins_home/workspace/my_pipeline/phpunit.xml
+
+...........F                                                      12 / 12 (100%)
+
+Time: 00:00.032, Memory: 8.00 MB
+
+There was 1 failure:
+
+1) PipelineScenarioTest::testCandidateIsRejectedBeforeDeploymentWhenRequested
+Falla controlada: rechazo en pruebas antes de desplegar
+
+/var/jenkins_home/workspace/my_pipeline/tests/PipelineScenarioTest.php:12
+
+FAILURES!
+Tests: 12, Assertions: 103, Failures: 1.
+Script phpunit handling the test event returned with error code 1
+[8m[0m[Pipeline] }
+[8m[0m[Pipeline] // withEnv
+[8m[0m[Pipeline] }
+[8m[0m[Pipeline] // stage
+[8m[0m[Pipeline] stage
+[8m[0m[Pipeline] { (Conectar al laboratorio)
+Stage "Conectar al laboratorio" skipped due to earlier failure(s)
+[8m[0m[Pipeline] getContext
+[8m[0m[Pipeline] }
+[8m[0m[Pipeline] // stage
+[8m[0m[Pipeline] stage
+[8m[0m[Pipeline] { (Construir candidata)
+Stage "Construir candidata" skipped due to earlier failure(s)
+[8m[0m[Pipeline] getContext
+[8m[0m[Pipeline] }
+[8m[0m[Pipeline] // stage
+[8m[0m[Pipeline] stage
+[8m[0m[Pipeline] { (Desplegar y validar candidata)
+Stage "Desplegar y validar candidata" skipped due to earlier failure(s)
+[8m[0m[Pipeline] getContext
+[8m[0m[Pipeline] }
+[8m[0m[Pipeline] // stage
+[8m[0m[Pipeline] stage
+[8m[0m[Pipeline] { (Cambiar tráfico y observar)
+Stage "Cambiar tráfico y observar" skipped due to earlier failure(s)
+[8m[0m[Pipeline] getContext
+[8m[0m[Pipeline] }
+[8m[0m[Pipeline] // stage
+[8m[0m[Pipeline] stage
+[8m[0m[Pipeline] { (Declarative: Post Actions)
+[8m[0m[Pipeline] script
+[8m[0m[Pipeline] {
+[8m[0m[Pipeline] sh
++ date +%s
++ echo PIPELINE_DURATION_SECONDS=6
+PIPELINE_DURATION_SECONDS=6
+[8m[0m[Pipeline] }
+[8m[0m[Pipeline] // script
+[8m[0m[Pipeline] }
+[8m[0m[Pipeline] // stage
+[8m[0m[Pipeline] }
+[8m[0m[Pipeline] // timeout
+[8m[0m[Pipeline] }
+[8m[0m[Pipeline] // withEnv
+[8m[0m[Pipeline] }
+[8m[0m[Pipeline] // node
+[8m[0m[Pipeline] End of Pipeline
+ERROR: script returned exit code 1
+Finished: FAILURE

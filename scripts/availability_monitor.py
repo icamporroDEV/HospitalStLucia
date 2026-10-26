@@ -74,6 +74,8 @@ def sample(base_url, started):
 def summarize(rows, detected_at=None, pipeline_duration_s=None):
     total = len(rows)
     successes = sum(row["ok"] == "1" for row in rows)
+    http_statuses = [int(row[field]) for row in rows for field in ("turnos_status", "version_status")]
+    http_successes = sum(200 <= status < 400 for status in http_statuses)
     outages = []
     first_failure = None
     third_failure = None
@@ -117,6 +119,11 @@ def summarize(rows, detected_at=None, pipeline_duration_s=None):
         "failed": total - successes,
         "success_rate_percent": round(successes * 100 / total, 3) if total else None,
         "error_rate_percent": round((total - successes) * 100 / total, 3) if total else None,
+        "http_requests": len(http_statuses),
+        "http_successful": http_successes,
+        "http_failed": len(http_statuses) - http_successes,
+        "http_success_rate_percent": round(http_successes * 100 / len(http_statuses), 3) if http_statuses else None,
+        "http_error_rate_percent": round((len(http_statuses) - http_successes) * 100 / len(http_statuses), 3) if http_statuses else None,
         "mean_observed_recovery_s": round(sum(recovered) / len(recovered), 3) if recovered else None,
         "max_observed_recovery_s": max(recovered) if recovered else None,
         "outages": outages,

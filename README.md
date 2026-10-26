@@ -77,6 +77,8 @@ La explicación de cada operación y del despliegue de una imagen candidata est�
 
 La toma de muestras externas, los CSV y el cálculo de métricas para las nueve corridas están en [`docs/monitoring.md`](docs/monitoring.md).
 
+Los resultados de las nueve corridas locales, con CSV y logs de Jenkins, están en [`docs/evidence/blue-green-local-2026-10-25/README.md`](docs/evidence/blue-green-local-2026-10-25/README.md).
+
 ## Rutas
 
 | Ruta | Uso |

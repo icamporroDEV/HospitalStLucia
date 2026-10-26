@@ -28,6 +28,7 @@ La fecha y la duración de ese ejemplo se reemplazan por los valores de la corri
 
 ## Interpretación
 
+- `http_success_rate_percent` y `http_error_rate_percent`: proporción de respuestas HTTP exitosas y fallidas, contando por separado las dos peticiones de cada muestra.
 - `success_rate_percent` y `error_rate_percent`: proporción de muestras donde `/api/turnos` responde con datos ficticios válidos y `/version` identifica la release.
 - `mttd_s`: tiempo desde el primer fallo observado por el monitor hasta que Jenkins detecta tres fallos consecutivos. Se calcula solo para C con `--detected-at`.
 - `observed_recovery_s`: tiempo desde el primer fallo observado hasta la primera muestra correcta tras el rollback. Es la medida observada del RTO. La resolución aproximada depende del intervalo de muestreo y la latencia HTTP.
@@ -36,14 +37,16 @@ La fecha y la duración de ese ejemplo se reemplazan por los valores de la corri
 
 En A y B no se esperan fallos de la URL pública. En C se espera una caída funcional breve seguida de recuperación en la versión y color anteriores. Registrar los resultados de las nueve corridas en la tabla del informe y adjuntar los CSV y los Console Output. No declarar cumplida la meta de RTO de 30 segundos hasta medir las tres corridas C.
 
-| Corrida | Build Jenkins | Resultado esperado | Error HTTP % | MTTD (s) | Recuperación observada (s) | Pipeline (s) |
-| --- | --- | --- | ---: | ---: | ---: | ---: |
-| A1 |  | SUCCESS |  | - | - |  |
-| A2 |  | SUCCESS |  | - | - |  |
-| A3 |  | SUCCESS |  | - | - |  |
-| B1 |  | FAILURE previo |  | - | - |  |
-| B2 |  | FAILURE previo |  | - | - |  |
-| B3 |  | FAILURE previo |  | - | - |  |
-| C1 |  | FAILURE con rollback |  |  |  |  |
-| C2 |  | FAILURE con rollback |  |  |  |  |
-| C3 |  | FAILURE con rollback |  |  |  |  |
+Las nueve mediciones realizadas están documentadas en [la evidencia local](evidence/blue-green-local-2026-10-25/README.md).
+
+| Corrida | Build Jenkins | Resultado esperado | Error HTTP % | Error funcional % | MTTD (s) | Recuperación observada (s) | Pipeline (s) |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: |
+| A1 |  | SUCCESS |  |  | - | - |  |
+| A2 |  | SUCCESS |  |  | - | - |  |
+| A3 |  | SUCCESS |  |  | - | - |  |
+| B1 |  | FAILURE previo |  |  | - | - |  |
+| B2 |  | FAILURE previo |  |  | - | - |  |
+| B3 |  | FAILURE previo |  |  | - | - |  |
+| C1 |  | FAILURE con rollback |  |  |  |  |  |
+| C2 |  | FAILURE con rollback |  |  |  |  |  |
+| C3 |  | FAILURE con rollback |  |  |  |  |  |

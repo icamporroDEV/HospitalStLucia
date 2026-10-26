@@ -74,13 +74,14 @@ export XDG_RUNTIME_DIR="/run/user/$(id -u)"
 scripts/build-local-image 1.0.0
 mkdir -p deploy/runtime
 cp deploy/state.env.example deploy/runtime/state.env
+mkdir -p deploy/runtime/jenkins-home
 docker compose --env-file deploy/runtime/state.env -f docker-compose.yml -f docker-compose.vm.yml up -d --build
 docker compose --env-file deploy/runtime/state.env -f docker-compose.yml -f docker-compose.vm.yml ps
 curl -fsS http://127.0.0.1:8080/version
 curl -fsS http://127.0.0.1:8080/api/turnos
 ```
 
-La primera construcción de Jenkins instala PHP, Composer, Docker CLI y Compose. Puede tardar varios minutos. Jenkins comparte `deploy/runtime/state.env` con el host para que los cambios de Blue/Green sobrevivan a nuevas ejecuciones. La imagen Jenkins usa el socket del **daemon rootless** del usuario de SSH; su proceso `root` dentro del contenedor se mapea al usuario sin privilegios del host.
+La primera construcción de Jenkins instala PHP, Composer, Docker CLI y Compose. Puede tardar varios minutos. Jenkins guarda sus datos en `deploy/runtime/jenkins-home`, creado por el usuario de SSH, y comparte `deploy/runtime/state.env` con el host para que los cambios de Blue/Green sobrevivan a nuevas ejecuciones. La imagen Jenkins usa el socket del **daemon rootless** del usuario de SSH; su proceso `root` dentro del contenedor se mapea al usuario sin privilegios del host.
 
 Para obtener la contraseña inicial de Jenkins:
 

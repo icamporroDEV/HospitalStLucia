@@ -21,6 +21,17 @@ En PowerShell, sustituir la ruta del `.pem` y el DNS de EC2:
 ssh -i "C:\ruta\privada\hospital-demo.pem" ubuntu@DNS_PUBLICO_DE_EC2
 ```
 
+Si OpenSSH muestra `UNPROTECTED PRIVATE KEY FILE` o `Bad permissions`, el `.pem` tiene permisos heredados para otros usuarios. En PowerShell, agregar lectura para la cuenta propia y quitar la herencia **solo a ese archivo** antes de repetir `ssh`:
+
+```powershell
+$key = 'C:\ruta\privada\hospital-demo.pem'
+icacls.exe $key /grant:r "$($env:USERNAME):(R)"
+icacls.exe $key /inheritance:r
+icacls.exe $key
+```
+
+Ver [solución oficial de AWS para claves privadas sin protección](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/TroubleshootingInstancesConnecting.html). No copiar el contenido de la clave a chats, capturas ni al repositorio.
+
 El usuario habitual de la AMI oficial de Ubuntu es `ubuntu`. Ver [conexión SSH a EC2](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/tutorial-launch-a-test-ec2-instance.html).
 
 ## 3. Instalar Docker rootless en Ubuntu

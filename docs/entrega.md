@@ -8,6 +8,7 @@
 | Reproducción técnica | [Guía VM](vm-demo.md), [guía de despliegue](../deploy/README.md) y [monitoreo](monitoring.md) | Configuración, escenarios y comandos. |
 | Presentación oral | [Guion de demo](guion-demo.md) | Secuencia sugerida, cifras que mostrar y aclaraciones metodológicas. |
 | Trabajo propuesto para integrar | [PR #4](https://github.com/icamporroDEV/HospitalStLucia/pull/4) | Pipeline, laboratorio y documentación; requiere revisión del propietario. |
+| Descripción del PR | [Texto listo para pegar](pr-description.md) | Resumen, evidencia y alcance del cambio. |
 
 ## Datos que debe confirmar el grupo antes de entregar
 

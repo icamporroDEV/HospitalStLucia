@@ -2,6 +2,8 @@
 /.phpunit.cache/
 /coverage/
 /vendor/
+__pycache__/
+*.pyc
 /deploy/runtime/
 
 .DS_Store

@@ -75,6 +75,8 @@ tests/Contract/blue-green-smoke.sh
 
 La explicación de cada operación y del despliegue de una imagen candidata está en [`deploy/README.md`](deploy/README.md).
 
+La toma de muestras externas, los CSV y el cálculo de métricas para las nueve corridas están en [`docs/monitoring.md`](docs/monitoring.md).
+
 ## Rutas
 
 | Ruta | Uso |

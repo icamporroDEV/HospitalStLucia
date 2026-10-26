@@ -22,6 +22,9 @@ pipeline {
     stages {
         stage('Obtener código') {
             steps {
+                script {
+                    env.PIPELINE_START_EPOCH = sh(script: 'date +%s', returnStdout: true).trim()
+                }
                 checkout scm
             }
         }
@@ -113,6 +116,16 @@ pipeline {
                         }
                         throw err
                     }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            script {
+                if (env.PIPELINE_START_EPOCH) {
+                    sh 'echo "PIPELINE_DURATION_SECONDS=$(( $(date +%s) - PIPELINE_START_EPOCH ))"'
                 }
             }
         }

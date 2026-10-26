@@ -16,7 +16,8 @@ La PoC usa datos ficticios y no modifica un HIS de producción.
 - **Después, EC2:** Jenkins #7 `SUCCESS` en 39 s, Blue → Green, 0/86 errores HTTP con timeout externo de 5 s. Jenkins #3 ejecutó rollback Blue → Green; recuperación observada 3,907 s. CSV y límites metodológicos en [evidencia VM](https://github.com/valenchillemi/HospitalStLucia/blob/1185a56/docs/evidence/blue-green-vm-2026-10-25/README.md).
 - [Informe final editable](https://github.com/valenchillemi/HospitalStLucia/blob/1185a56/docs/informe-final.docx) · [Markdown](https://github.com/valenchillemi/HospitalStLucia/blob/1185a56/docs/informe-final.md) · [índice de entrega](https://github.com/valenchillemi/HospitalStLucia/blob/1185a56/docs/entrega.md).
 - El build VM #2 terminó en `FAILURE` esperado antes del despliegue (2 s) y el #6 en `SUCCESS` (39 s). El [log #6 y extracto #2](https://github.com/valenchillemi/HospitalStLucia/blob/codex/jenkins-blue-green/docs/evidence/blue-green-vm-2026-10-25/README.md) acompañan los CSV.
-- Pendiente de la entrega grupal: confirmar costo AWS, Gantt y actualización final de las tarjetas Trello. La [captura del tablero](https://github.com/valenchillemi/HospitalStLucia/blob/codex/jenkins-blue-green/docs/evidence/kanban-2026-10-25.png) muestra 4 Por hacer, 0 En curso, 1 A validar y 13 Completado.
+- La [planificación de costos](https://github.com/valenchillemi/HospitalStLucia/blob/codex/jenkins-blue-green/docs/plan-costos-consultoria.md) estima honorarios de la consultora y consumo incremental de AWS, separado de la cuenta Free de la demo.
+- Pendiente de la entrega grupal: validar las hipótesis de capacidad con la clínica, confirmar Gantt y actualizar las tarjetas Trello. La [captura del tablero](https://github.com/valenchillemi/HospitalStLucia/blob/codex/jenkins-blue-green/docs/evidence/kanban-2026-10-25.png) muestra 4 Por hacer, 0 En curso, 1 A validar y 13 Completado.
 
 ## Merge Danger
 

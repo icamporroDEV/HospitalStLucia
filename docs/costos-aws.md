@@ -1,6 +1,6 @@
-# Registro del costo de la demostración en AWS
+# Consulta opcional del gasto de la cuenta de demostración
 
-Este registro separa el costo estimado del uso, los créditos aplicados y el importe a pagar. Completarlo con la consola de la cuenta utilizada para la VM. No incluir el número de cuenta completo, datos de tarjeta, contraseñas ni claves.
+Este registro sirve solo para documentar la cuenta Free usada en la PoC. **El presupuesto propuesto para la Clínica Santa Lucía está en [plan-costos-consultoria.md](plan-costos-consultoria.md)** y calcula el costo incremental de Blue Green sobre su AWS existente. Los créditos de la demo no fijan el precio del servicio para la clínica. Si se consulta esta cuenta, separar el costo estimado del uso, los créditos aplicados y el importe a pagar. No incluir el número de cuenta completo, datos de tarjeta, contraseñas ni claves.
 
 ## Cómo obtener las cifras
 

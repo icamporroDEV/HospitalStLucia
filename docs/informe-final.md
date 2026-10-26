@@ -16,7 +16,7 @@ La prueba de concepto (PoC) implementó un despliegue Blue Green automatizado pa
 
 Se probaron tres escenarios: despliegue exitoso, rechazo antes de desplegar y fallo funcional posterior al cambio con rollback. En el laboratorio local se realizaron tres repeticiones de cada uno. Los tres despliegues exitosos registraron **0 errores en 2524 peticiones HTTP** externas. En las tres pruebas de rollback, la recuperación observada media fue **3,583 s** y la peor **3,75 s**, por debajo de la meta de 30 s. La topología se reprodujo en una VM EC2: el build exitoso #7 registró **0 errores en 86 peticiones** con un timeout de 5 s por petición, y el fallo inducido del build #3 se recuperó en **3,907 s** desde la primera muestra fallida. Estas cifras describen ventanas de ensayo, no un SLA de producción.
 
-El alcance excluye historias clínicas reales, datos sensibles, bases de datos y alta disponibilidad de infraestructura. Falta incorporar al documento de entrega el gasto real de AWS. El estado visible del tablero Trello se registró mediante captura: cuatro tarjetas Por hacer, ninguna En curso, una A validar y trece Completado. El PR del pipeline está abierto para integración al repositorio principal.
+El alcance excluye historias clínicas reales, datos sensibles, bases de datos y alta disponibilidad de infraestructura. La cuenta Free solo financió la demostración. Para la clínica se preparó un **plan de costos incremental** que separa honorarios de consultoría y recursos AWS adicionales; el importe definitivo de AWS exige conocer la infraestructura y carga existentes. El estado visible del tablero Trello se registró mediante captura: cuatro tarjetas Por hacer, ninguna En curso, una A validar y trece Completado. El PR del pipeline está abierto para integración al repositorio principal.
 
 ## 1. Problema, objetivo y alcance
 
@@ -104,7 +104,7 @@ En el build #3, el tercer fallo de Jenkins quedó registrado a las `01:54:46.630
 
 **Operación y seguridad.** La clave SSH y las credenciales de Jenkins deben permanecer fuera del repositorio. En la VM se usó Docker rootless; el acceso al daemon sigue siendo una capacidad operativa sensible y debe limitarse al laboratorio. El grupo debe conservar los CSV y Console Output antes de eliminar recursos de AWS. La guía de VM recomienda restringir SSH a la IP propia y acceder a la app y Jenkins por túnel.
 
-**Costo.** La cuenta se creó en plan Free y la VM consume recursos de EC2 y almacenamiento mientras exista. No se dispone en el repositorio de un importe final verificado ni de una captura del presupuesto AWS, por lo que este informe no afirma costo cero. Antes de entregar, agregar el monto observado en Billing, el tipo de instancia, el tamaño del volumen y una captura del presupuesto o alerta. Al terminar la demo, revisar y terminar la instancia y los recursos asociados que ya no se necesiten.
+**Costo de la propuesta.** La Clínica Santa Lucía ya utiliza AWS, por lo que se presupuesta solo el **incremento de Blue Green** y los honorarios de la consultora. El [plan detallado](plan-costos-consultoria.md) supone 100 h iniciales y 8 h/mes. Con una tarifa **hipotética de USD 40/h** y 15 % de contingencia inicial, resulta **USD 4600 una vez** y **USD 320/mes**; no es una oferta contractual. AWS se suma según segundo slot, almacenamiento y servicios que no puedan reutilizarse. El ejemplo del primer año es `USD 8440 + 13,8 × C_AWS`, con `C_AWS` igual al costo mensual incremental estimado en AWS Pricing Calculator. El importe definitivo exige el inventario de TI; los créditos Free de la demo no se aplican a la clínica.
 
 ## 9. Gestión del trabajo y trazabilidad
 
@@ -116,7 +116,7 @@ El código y la evidencia de esta PoC están propuestos en el PR #4 de `icamporr
 
 La PoC mostró que un cambio de versión puede validarse en el color inactivo y promoverse con 0 errores HTTP observados en las corridas exitosas seleccionadas. También mostró que una candidata técnicamente viva puede fallar en una función visible para usuarios: el escenario C produjo HTTP 503 en Turnos, Jenkins detectó la secuencia y restauró el color estable dentro de la meta medida. La versión de producción quedó identificable por commit y número de build.
 
-Para cerrar la entrega grupal faltan: completar el costo observado en AWS; confirmar el Gantt y actualizar las tarjetas de Trello según la revisión grupal; revisar el texto con los cuatro integrantes; y completar la descripción, revisión e integración del PR. Estos pendientes son documentales y de coordinación; no invalidan los resultados técnicos ya medidos.
+Para cerrar la entrega grupal faltan: validar con la clínica las hipótesis de esfuerzo y capacidad para convertir el plan de costos en una cotización firme; confirmar el Gantt y actualizar las tarjetas de Trello según la revisión grupal; revisar el texto con los cuatro integrantes; y completar la descripción, revisión e integración del PR. Estos pendientes son de alcance y coordinación; no invalidan los resultados técnicos ya medidos.
 
 ## Anexo A Fuentes internas reproducibles
 
@@ -125,4 +125,5 @@ Para cerrar la entrega grupal faltan: completar el costo observado en AWS; confi
 - Protocolo de medición: `docs/monitoring.md` y `scripts/availability_monitor.py`.
 - Laboratorio local: `docs/evidence/blue-green-local-2026-10-25/README.md`, CSV y nueve logs Jenkins.
 - VM: `docs/vm-demo.md` y `docs/evidence/blue-green-vm-2026-10-25/README.md`, con cinco CSV y logs de #2 y #6.
+- Presupuesto: `docs/plan-costos-consultoria.md`, con honorarios hipotéticos y modelo AWS incremental.
 - Seguimiento: `docs/agents/issue-tracker.md`, captura `docs/evidence/kanban-2026-10-25.png` y tablero Trello del Grupo 03.

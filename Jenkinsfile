@@ -7,6 +7,11 @@ pipeline {
         timeout(time: 15, unit: 'MINUTES')
     }
 
+    parameters {
+        choice(name: 'DEMO_SCENARIO', choices: ['happy', 'pre-test', 'post-deploy'],
+            description: 'Escenario de la PoC Blue/Green')
+    }
+
     environment {
         COMPOSE_PROJECT_NAME = 'hospital'
         PUBLIC_URL = 'http://nginx:8080'
@@ -24,7 +29,9 @@ pipeline {
         stage('Pruebas PHP') {
             steps {
                 sh 'composer install --no-interaction --prefer-dist'
-                sh 'composer test'
+                withEnv(["DEMO_SCENARIO=${params.DEMO_SCENARIO ?: 'happy'}"]) {
+                    sh 'composer test'
+                }
             }
         }
 
@@ -73,7 +80,11 @@ pipeline {
 
         stage('Desplegar y validar candidata') {
             steps {
-                sh './deploy/bin/deploy-color "$TARGET_COLOR" "$RELEASE_IMAGE"'
+                script {
+                    env.FAILURE_MODE = params.DEMO_SCENARIO == 'post-deploy' ? 'post-deploy' : 'none'
+                    env.FAILURE_DELAY = params.DEMO_SCENARIO == 'post-deploy' ? '5' : '0'
+                }
+                sh './deploy/bin/deploy-color "$TARGET_COLOR" "$RELEASE_IMAGE" "$FAILURE_MODE" "$FAILURE_DELAY"'
                 sh '''
                     case "$TARGET_COLOR" in
                         blue) target_url=$BLUE_URL ;;
@@ -92,6 +103,9 @@ pipeline {
                     try {
                         sh './deploy/bin/switch-color "$TARGET_COLOR"'
                         switched = true
+                        if (params.DEMO_SCENARIO == 'post-deploy') {
+                            sh './deploy/bin/trigger-failure "$TARGET_COLOR"'
+                        }
                         sh './deploy/bin/observe-public "$RELEASE_VERSION"'
                     } catch (err) {
                         if (switched) {
